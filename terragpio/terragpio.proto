@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+option go_package = "terragpio/terragpio";
+
+package terragpio;
+
+service setgpio {
+    rpc SetPWM(pwm) returns (pwm) {}
+}
+
+message pwm {
+    string pin = 1; // expect the pin to be expressed in terms of GPIO standard (i.e. GPIO6) 
+    int32 dutycycle = 2; // will convert int to a float expressed as percentage
+    int32 frequency = 3; // expecting hertz
+}
+
+/*
+
+protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative terragpio.proto
+
+*/

@@ -1,0 +1,51 @@
+{
+    "version": "2.0.0",
+    "cwd": "${workspaceFolder}",
+    "tasks": [
+        {
+            "label": "install",
+            "command": "go",
+            "args": [
+                "install",
+                "-v",
+                "./..."
+            ],
+            "group": "build",
+            "type": "shell"
+        },
+        {
+            "label": "run",
+            "command": "go",
+            "args": [
+                "run",
+                "${file}"
+            ],
+            "group": "build",
+            "type": "shell"
+        },
+        {
+            "label": "test",
+            "command": "go",
+            "args": [
+                "test",
+                "-v",
+                "./..."
+            ],
+            "group": "test",
+            "type": "shell"
+        },
+        {
+            "label": "build",
+            "command": "go",
+            "args": [
+                "build",
+                "${file}"
+            ],
+            "group": "build",
+            "type": "shell",
+            "problemMatcher": [
+                "$go"
+            ]
+        }
+    ],
+}
