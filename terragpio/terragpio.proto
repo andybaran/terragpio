@@ -10,8 +10,8 @@ service setgpio {
 
 message pwm {
     string pin = 1; // expect the pin to be expressed in terms of GPIO standard (i.e. GPIO6) 
-    int32 dutycycle = 2; // will convert int to a float expressed as percentage
-    int32 frequency = 3; // expecting hertz
+    string dutycycle = 2; // format is "nn%" where nn is 00 - 100
+    string frequency = 3; // format is "nM" where is Mega Hertz 
 }
 
 /*

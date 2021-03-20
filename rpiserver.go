@@ -20,13 +20,11 @@ type terragpioserver struct {
 }
 
 // TODO : What should I return here? the whole Pwm seems unnecesary
-// TODO : How can I pass in settings.Dutycyle and settings.Frequency correctly?
+// TODO : Review use of pointers and refs here..should I be using & in the body?
 func (s *terragpioserver) SetPWM(ctx context.Context, settings *pb.Pwm) (*pb.Pwm, error) {
 	//settings := settings
 	pin := gpioreg.ByName(settings.Pin)
-	realDutyCycle := gpio.DutyMax * (1 / 2) //settings.Dutycycle
-	realFrequency := physic.Hertz * 25000   //settings.Frequency
-	if err := pin.PWM(realDutyCycle, realFrequency); err != nil {
+	if err := pin.PWM(gpio.Duty(settings.Dutycycle), physic.Frequency(settings.Frequency)); err != nil {
 		println(err)
 		return settings, err
 	}
