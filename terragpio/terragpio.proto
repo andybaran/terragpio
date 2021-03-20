@@ -5,7 +5,7 @@ option go_package = "terragpio/terragpio";
 package terragpio;
 
 service setgpio {
-    rpc SetPWM(pwm) returns (pwm) {}
+    rpc SetPWM(pwm) returns() {}
 }
 
 message pwm {
