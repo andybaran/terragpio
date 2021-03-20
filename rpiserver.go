@@ -19,12 +19,13 @@ type terragpioserver struct {
 	pb.UnimplementedSetgpioServer
 }
 
-// TODO : What should I return here?
+// TODO : What should I return here? the whole Pwm seems unnecesary
+// TODO : How can I pass in settings.Dutycyle and settings.Frequency correctly?
 func (s *terragpioserver) SetPWM(ctx context.Context, settings *pb.Pwm) (*pb.Pwm, error) {
 	//settings := settings
 	pin := gpioreg.ByName(settings.Pin)
-	realDutyCycle := gpio.DutyMax * settings.Dutycycle
-	realFrequency := settings.Frequency * physic.Hertz
+	realDutyCycle := gpio.DutyMax * (1 / 2) //settings.Dutycycle
+	realFrequency := physic.Hertz * 25000   //settings.Frequency
 	if err := pin.PWM(realDutyCycle, realFrequency); err != nil {
 		println(err)
 		return settings, err

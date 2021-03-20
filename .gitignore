@@ -1,0 +1,22 @@
+# vscode directories
+**/.vscode/*
+
+
+#  Local .terraform directories
+**/.terraform/*
+# .tfstate files
+*.tfstate
+*.tfstate.*
+# terraform config files
+*.terraformrc
+*terraformrc*
+# tfvars file
+terraform.tfvars
+*.tfvars
+# TFE airgrap bundle
+*.airgap*
+# TFE license files
+*.rli
+# Terraform testing config files
+**/examples/*/*.tf
+.terraform.lock.hcl
