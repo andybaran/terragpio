@@ -4,7 +4,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"log"
 	"net"
 
 	pb "terragpio"
@@ -13,6 +12,14 @@ import (
 	"periph.io/x/conn/gpio"
 	"periph.io/x/conn/gpio/gpioreg"
 	"periph.io/x/conn/physic"
+)
+
+var (
+	tls        = flag.Bool("tls", false, "Connection uses TLS if true, else plain TCP")
+	certFile   = flag.String("cert_file", "", "The TLS cert file")
+	keyFile    = flag.String("key_file", "", "The TLS key file")
+	jsonDBFile = flag.String("json_db_file", "", "A json file containing a list of features")
+	port       = flag.Int("port", 10001, "The server port")
 )
 
 type terragpioserver struct {
@@ -38,9 +45,9 @@ func newServer() *terragpioserver {
 
 func main() {
 	flag.Parse()
-	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", 10001))
+	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", *port))
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		fmt.Printf("failed to listen: %v", err)
 	}
 	var opts []grpc.ServerOption
 	grpcServer := grpc.NewServer(opts...)

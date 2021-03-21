@@ -20,3 +20,5 @@ terraform.tfvars
 # Terraform testing config files
 **/examples/*/*.tf
 .terraform.lock.hcl
+rpiclient
+rpiserver
