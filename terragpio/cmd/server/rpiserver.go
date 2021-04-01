@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"net"
 
-	pb "terragpio"
+	pb "github.com/andybaran/fictional-goggles/terragpio"
 
 	"google.golang.org/grpc"
-	"periph.io/x/conn/gpio/gpioreg/v3"
-	"periph.io/x/conn/gpio/v3"
-	"periph.io/x/conn/physic/v3"
+	"periph.io/x/conn/v3/gpio"
+	"periph.io/x/conn/v3/gpio/gpioreg"
+	"periph.io/x/conn/v3/physic"
 )
 
 var (
@@ -31,7 +31,20 @@ type terragpioserver struct {
 func (s *terragpioserver) SetPWM(ctx context.Context, settings *pb.Pwm) (*pb.Pwm, error) {
 	//settings := settings
 	pin := gpioreg.ByName(settings.Pin)
-	if err := pin.PWM(gpio.Duty(settings.Dutycycle), physic.Frequency(settings.Frequency)); err != nil {
+
+	d, err := gpio.ParseDuty(settings.Dutycycle)
+	if err != nil {
+		println(err)
+		return settings, err
+	}
+
+	var f physic.Frequency
+	if err := f.Set(settings.Frequency); err != nil {
+		println(err)
+		return settings, err
+	}
+
+	if err := pin.PWM(d, f); err != nil {
 		println(err)
 		return settings, err
 	}

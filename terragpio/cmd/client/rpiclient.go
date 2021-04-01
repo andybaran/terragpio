@@ -7,7 +7,7 @@ import (
 	"log"
 	"time"
 
-	pb "terragpio"
+	pb "github.com/andybaran/fictional-goggles/terragpio"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -62,8 +62,8 @@ func main() {
 	// Set PWM
 	setPWM(client, &pb.Pwm{
 		Pin:       "GPIO6",
-		Dutycycle: 100,
-		Frequency: 25000,
+		Dutycycle: "100",
+		Frequency: "25000",
 	})
 
 }
