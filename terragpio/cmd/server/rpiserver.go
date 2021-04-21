@@ -26,9 +26,7 @@ type terragpioserver struct {
 	pb.UnimplementedSetgpioServer
 }
 
-// TODO : What should I return here? the whole Pwm seems unnecesary
-// TODO : Review use of pointers and refs here..should I be using & in the body?
-func (s *terragpioserver) SetPWM(ctx context.Context, settings *pb.Pwm) (*pb.Pwm, error) {
+func (s *terragpioserver) SetPWM(ctx context.Context, settings *pb.PWMRequest) (*pb.PWMResponse, error) {
 	//settings := settings
 	pin := gpioreg.ByName(settings.Pin)
 
@@ -54,6 +52,21 @@ func (s *terragpioserver) SetPWM(ctx context.Context, settings *pb.Pwm) (*pb.Pwm
 func newServer() *terragpioserver {
 	s := &terragpioserver{}
 	return s
+}
+
+func genPWMResponse() (response pb.PWMResponse) {
+	var err string
+	err = "notYet"
+	//what's special about "nil"?
+
+	if err != "notYet" {
+		response.Verified = false
+		return response
+	}
+
+	response.Verified = true
+	return response
+
 }
 
 func main() {
