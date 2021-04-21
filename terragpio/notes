@@ -1,0 +1,6 @@
+https://golang.org/cmd/go/#hdr-Description_of_package_lists
+GOOS=linux GOARCH=arm go build ./...
+
+
+https://www.ssh.com/academy/ssh/copy-id#copy-the-key-to-a-server
+scp server pi@10.15.21.139:/home/pi/bins
