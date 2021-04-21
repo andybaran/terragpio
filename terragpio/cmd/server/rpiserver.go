@@ -22,12 +22,17 @@ var (
 	port       = flag.Int("port", 10001, "The server port")
 )
 
+type pinState struct {
+	DutyCycle gpio.Duty
+	Frequency physic.Frequency
+}
 type terragpioserver struct {
 	pb.UnimplementedSetgpioServer
+	Pins map[string]pinState
 }
 
 func (s *terragpioserver) SetPWM(ctx context.Context, settings *pb.PWMRequest) (*pb.PWMResponse, error) {
-	//settings := settings
+
 	pin := gpioreg.ByName(settings.Pin)
 
 	d, err := gpio.ParseDuty(settings.Dutycycle)
@@ -46,15 +51,25 @@ func (s *terragpioserver) SetPWM(ctx context.Context, settings *pb.PWMRequest) (
 		println(err)
 		return settings, err
 	}
+
+	thisPinState := pinState{
+		DutyCycle: d,
+		Frequency: f,
+	}
+
+	s.Pins[settings.Pin] = thisPinState
+
 	return settings, nil
 }
 
 func newServer() *terragpioserver {
 	s := &terragpioserver{}
+	//s.Pins = make(map[string]pinState)
 	return s
 }
 
-func genPWMResponse() (response pb.PWMResponse) {
+func (s *terragpioserver) genPWMResponse() (response pb.PWMResponse) {
+
 	var err string
 	err = "notYet"
 	//what's special about "nil"?
@@ -79,4 +94,5 @@ func main() {
 	grpcServer := grpc.NewServer(opts...)
 	pb.RegisterSetgpioServer(grpcServer, newServer())
 	grpcServer.Serve(lis)
+
 }
