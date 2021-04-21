@@ -18,7 +18,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type SetgpioClient interface {
-	SetPWM(ctx context.Context, in *Pwm, opts ...grpc.CallOption) (*Pwm, error)
+	SetPWM(ctx context.Context, in *PWMRequest, opts ...grpc.CallOption) (*PWMResponse, error)
 }
 
 type setgpioClient struct {
@@ -29,8 +29,8 @@ func NewSetgpioClient(cc grpc.ClientConnInterface) SetgpioClient {
 	return &setgpioClient{cc}
 }
 
-func (c *setgpioClient) SetPWM(ctx context.Context, in *Pwm, opts ...grpc.CallOption) (*Pwm, error) {
-	out := new(Pwm)
+func (c *setgpioClient) SetPWM(ctx context.Context, in *PWMRequest, opts ...grpc.CallOption) (*PWMResponse, error) {
+	out := new(PWMResponse)
 	err := c.cc.Invoke(ctx, "/terragpio.setgpio/SetPWM", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -42,7 +42,7 @@ func (c *setgpioClient) SetPWM(ctx context.Context, in *Pwm, opts ...grpc.CallOp
 // All implementations must embed UnimplementedSetgpioServer
 // for forward compatibility
 type SetgpioServer interface {
-	SetPWM(context.Context, *Pwm) (*Pwm, error)
+	SetPWM(context.Context, *PWMRequest) (*PWMResponse, error)
 	mustEmbedUnimplementedSetgpioServer()
 }
 
@@ -50,7 +50,7 @@ type SetgpioServer interface {
 type UnimplementedSetgpioServer struct {
 }
 
-func (UnimplementedSetgpioServer) SetPWM(context.Context, *Pwm) (*Pwm, error) {
+func (UnimplementedSetgpioServer) SetPWM(context.Context, *PWMRequest) (*PWMResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetPWM not implemented")
 }
 func (UnimplementedSetgpioServer) mustEmbedUnimplementedSetgpioServer() {}
@@ -67,7 +67,7 @@ func RegisterSetgpioServer(s grpc.ServiceRegistrar, srv SetgpioServer) {
 }
 
 func _Setgpio_SetPWM_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Pwm)
+	in := new(PWMRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -79,7 +79,7 @@ func _Setgpio_SetPWM_Handler(srv interface{}, ctx context.Context, dec func(inte
 		FullMethod: "/terragpio.setgpio/SetPWM",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SetgpioServer).SetPWM(ctx, req.(*Pwm))
+		return srv.(SetgpioServer).SetPWM(ctx, req.(*PWMRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
