@@ -12,6 +12,7 @@ import (
 	"periph.io/x/conn/v3/gpio"
 	"periph.io/x/conn/v3/gpio/gpioreg"
 	"periph.io/x/conn/v3/physic"
+	"periph.io/x/host/v3"
 )
 
 var (
@@ -33,23 +34,25 @@ type terragpioserver struct {
 
 func (s *terragpioserver) SetPWM(ctx context.Context, settings *pb.PWMRequest) (*pb.PWMResponse, error) {
 
+	fmt.Printf("settings: %+v \n", settings)
 	pin := gpioreg.ByName(settings.Pin)
+	fmt.Printf("pin: %+v", pin)
 
 	d, err := gpio.ParseDuty(settings.Dutycycle)
 	if err != nil {
 		println(err)
-		return settings, err
+		return nil, err
 	}
 
 	var f physic.Frequency
 	if err := f.Set(settings.Frequency); err != nil {
 		println(err)
-		return settings, err
+		return nil, err
 	}
 
 	if err := pin.PWM(d, f); err != nil {
 		println(err)
-		return settings, err
+		return nil, err
 	}
 
 	thisPinState := pinState{
@@ -59,11 +62,13 @@ func (s *terragpioserver) SetPWM(ctx context.Context, settings *pb.PWMRequest) (
 
 	s.Pins[settings.Pin] = thisPinState
 
-	return settings, nil
+	resp := pb.PWMResponse{Verified: true}
+	return &resp, nil
 }
 
 func newServer() *terragpioserver {
 	s := &terragpioserver{}
+
 	//s.Pins = make(map[string]pinState)
 	return s
 }
@@ -86,6 +91,9 @@ func (s *terragpioserver) genPWMResponse() (response pb.PWMResponse) {
 
 func main() {
 	flag.Parse()
+	host.Init()
+	fmt.Printf("Available Pins: %+v \n", gpioreg.All())
+
 	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", *port))
 	if err != nil {
 		fmt.Printf("failed to listen: %v", err)
