@@ -22,3 +22,4 @@ terraform.tfvars
 .terraform.lock.hcl
 rpiclient
 rpiserver
+.DS_Store
