@@ -21,8 +21,8 @@ var (
 	serverHostOverride = flag.String("server_host_override", "x.test.youtube.com", "The server name used to verify the hostname returned by the TLS handshake")
 )
 
-func setPWM(client pb.SetgpioClient, settings *pb.Pwm) {
-	fmt.Printf("Setting PWM (%d, %d, %d)", settings.Pin, settings.Dutycycle, settings.Frequency)
+func setPWM(client pb.SetgpioClient, settings *pb.PWMRequest) {
+	fmt.Printf("Setting PWM --> %+v \n", settings)
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	actualsettings, err := client.SetPWM(ctx, settings)
@@ -60,9 +60,9 @@ func main() {
 	client := pb.NewSetgpioClient(conn)
 
 	// Set PWM
-	setPWM(client, &pb.Pwm{
-		Pin:       "GPIO6",
-		Dutycycle: "100",
+	setPWM(client, &pb.PWMRequest{
+		Pin:       "GPIO12",
+		Dutycycle: "00",
 		Frequency: "25000",
 	})
 
