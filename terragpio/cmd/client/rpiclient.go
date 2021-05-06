@@ -33,6 +33,11 @@ func setPWM(client pb.SetgpioClient, settings *pb.PWMRequest) {
 }
 
 func main() {
+
+	pinPtr := flag.String("pin", "", "GPIO Pin")
+	dutyCyclePtr := flag.String("dutycycle", "", "Duty cycle")
+	freqPtr := flag.String("frequency", "", "Frequency")
+
 	flag.Parse()
 
 	var opts []grpc.DialOption
@@ -61,9 +66,9 @@ func main() {
 
 	// Set PWM
 	setPWM(client, &pb.PWMRequest{
-		Pin:       "GPIO12",
-		Dutycycle: "100%",
-		Frequency: "25000",
+		Pin:       *pinPtr,       //"GPIO12",
+		Dutycycle: *dutyCyclePtr, //"100%",
+		Frequency: *freqPtr,      //"25000",
 	})
 
 }
