@@ -63,6 +63,9 @@ func (s *terragpioserver) SetPWM(ctx context.Context, settings *pb.PWMRequest) (
 
 	s.Pins[settings.Pin] = thisPinState
 
+	fmt.Printf("Duty Cycle: %+v \n", d)
+	fmt.Printf("Frequency : %+v \n", f)
+
 	resp := pb.PWMResponse{Verified: true}
 	return &resp, nil
 }
