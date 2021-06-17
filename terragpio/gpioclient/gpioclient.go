@@ -52,3 +52,5 @@ func NewClient(serverAddr string) (*Client, error) {
 	return &Client{c: c}, nil
 
 }
+
+func main() {}
