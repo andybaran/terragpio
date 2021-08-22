@@ -49,7 +49,8 @@ func main() {
 	dutyCyclePtr := flag.String("dutycycle", "", "Duty cycle")
 	freqPtr := flag.String("frequency", "", "Frequency")
 
-	I2Caddr := flag.String("I2Caddr", "0x76", "I2C Address")
+	I2Cbus := flag.String("I2Cbus", "1", "I2C Bus")        //Very likely "1" on a raspberry pi
+	I2Caddr := flag.Uint64("I2Caddr", 0x77, "I2C Address") //BME280 may also be 0x76
 
 	flag.Parse()
 
@@ -85,6 +86,7 @@ func main() {
 	})
 
 	SetBME280(client, &pb.BME280Request{
+		I2Cbus:  *I2Cbus,
 		I2Caddr: *I2Caddr, // "0x76"
 	})
 
