@@ -66,7 +66,7 @@ func main() {
 
 	// Set PWM
 	setPWM(client, &pb.PWMRequest{
-		Pin:       *pinPtr,       //"GPIO12",
+		Pin:       *pinPtr,       //"GPIO13",
 		Dutycycle: *dutyCyclePtr, //"100%",
 		Frequency: *freqPtr,      //"25000",
 	})

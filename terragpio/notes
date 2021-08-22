@@ -5,3 +5,9 @@ https://www.ssh.com/academy/ssh/copy-id#copy-the-key-to-a-server
 scp server pi@10.15.21.139:/home/pi/bins
 
 protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative terragpio.proto
+
+# easier SNMP browsing
+http://www.circitor.fr/Mibs/Html/F/FOUNDRY-SN-AGENT-MIB.php
+Actual: 1.3.6.1.4.1.1991.1.1.1.1.18
+Warn: 1.3.6.1.4.1.1991.1.1.1.1.19
+Shutdown: 1.3.6.1.4.1.1991.1.1.1.1.20
