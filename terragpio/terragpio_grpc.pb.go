@@ -19,6 +19,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type SetgpioClient interface {
 	SetPWM(ctx context.Context, in *PWMRequest, opts ...grpc.CallOption) (*PWMResponse, error)
+	SetBME280(ctx context.Context, in *BME280Request, opts ...grpc.CallOption) (*BME280Response, error)
 }
 
 type setgpioClient struct {
@@ -38,11 +39,21 @@ func (c *setgpioClient) SetPWM(ctx context.Context, in *PWMRequest, opts ...grpc
 	return out, nil
 }
 
+func (c *setgpioClient) SetBME280(ctx context.Context, in *BME280Request, opts ...grpc.CallOption) (*BME280Response, error) {
+	out := new(BME280Response)
+	err := c.cc.Invoke(ctx, "/terragpio.setgpio/SetBME280", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SetgpioServer is the server API for Setgpio service.
 // All implementations must embed UnimplementedSetgpioServer
 // for forward compatibility
 type SetgpioServer interface {
 	SetPWM(context.Context, *PWMRequest) (*PWMResponse, error)
+	SetBME280(context.Context, *BME280Request) (*BME280Response, error)
 	mustEmbedUnimplementedSetgpioServer()
 }
 
@@ -52,6 +63,9 @@ type UnimplementedSetgpioServer struct {
 
 func (UnimplementedSetgpioServer) SetPWM(context.Context, *PWMRequest) (*PWMResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetPWM not implemented")
+}
+func (UnimplementedSetgpioServer) SetBME280(context.Context, *BME280Request) (*BME280Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetBME280 not implemented")
 }
 func (UnimplementedSetgpioServer) mustEmbedUnimplementedSetgpioServer() {}
 
@@ -84,6 +98,24 @@ func _Setgpio_SetPWM_Handler(srv interface{}, ctx context.Context, dec func(inte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Setgpio_SetBME280_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BME280Request)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SetgpioServer).SetBME280(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/terragpio.setgpio/SetBME280",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SetgpioServer).SetBME280(ctx, req.(*BME280Request))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Setgpio_ServiceDesc is the grpc.ServiceDesc for Setgpio service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -94,6 +126,10 @@ var Setgpio_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SetPWM",
 			Handler:    _Setgpio_SetPWM_Handler,
+		},
+		{
+			MethodName: "SetBME280",
+			Handler:    _Setgpio_SetBME280_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

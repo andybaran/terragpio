@@ -6,6 +6,7 @@ require (
 	google.golang.org/grpc v1.36.1
 	google.golang.org/grpc/examples v0.0.0-20210331235824-f6bb3972ed15
 	google.golang.org/protobuf v1.26.0
-	periph.io/x/conn/v3 v3.6.7
-	periph.io/x/host/v3 v3.6.7 // indirect
+	periph.io/x/conn/v3 v3.6.8
+	periph.io/x/devices/v3 v3.6.11
+	periph.io/x/host/v3 v3.7.0
 )

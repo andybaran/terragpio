@@ -6,6 +6,7 @@ package terragpio;
 
 service setgpio {
     rpc SetPWM(PWMRequest) returns(PWMResponse) {}
+    rpc SetBME280(BME280Request) returns(BME280Response) {}
 }
 
 message PWMRequest {
@@ -16,4 +17,15 @@ message PWMRequest {
 
 message PWMResponse {
     bool verified = 1; 
+}
+
+message BME280Request {
+    //string I2Cbus = 1;
+    string I2Caddr = 2; // format should be expressed like 0x76
+}
+
+message BME280Response {
+    string temperature = 1;
+    string humidity = 2;
+    string pressure = 3;
 }
