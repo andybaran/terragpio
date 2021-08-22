@@ -8,6 +8,8 @@ echo "Building"
 echo "************************************************"
 echo ""
 GOOS=linux GOARCH=arm go build -v -a ./...
+GOOS=linux GOARCH=arm go build -v -a ./cmd/server/rpiserver.go -o ./server
+GOOS=linux GOARCH=arm go build -v -a ./cmd/client/rpiclient.go -o ./client    
 echo ""
 echo "************************************************"
 echo "Done building"

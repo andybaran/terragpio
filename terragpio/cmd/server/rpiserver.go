@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"log"
 	"net"
 
 	pb "github.com/andybaran/fictional-goggles/terragpio"
@@ -11,9 +12,10 @@ import (
 	"google.golang.org/grpc"
 	"periph.io/x/conn/v3/gpio"
 	"periph.io/x/conn/v3/gpio/gpioreg"
+	"periph.io/x/conn/v3/i2c/i2creg"
 	"periph.io/x/conn/v3/physic"
+	"periph.io/x/devices/v3/bmxx80"
 	"periph.io/x/host/v3"
-	"periph.io/x/host/v3/rpi"
 )
 
 var (
@@ -70,6 +72,34 @@ func (s *terragpioserver) SetPWM(ctx context.Context, settings *pb.PWMRequest) (
 	return &resp, nil
 }
 
+func (s *terragpioserver) SetBME280(ctx context.Context, settings *pb.BME280Request) (*pb.BME280Response, error) {
+	fmt.Printf("settings: %+v \n\n", settings)
+
+	bus, err := i2creg.Open(settings.I2Cbus) // ToDo: This uses first found I2C bus; add option to specify bus
+	if err != nil {
+		log.Fatal(err)
+		return nil, err
+	}
+	defer bus.Close()
+
+	dev, err := bmxx80.NewI2C(bus, uint16(settings.I2Caddr), &bmxx80.DefaultOpts)
+	if err != nil {
+		log.Fatal(err)
+		return nil, err
+	}
+	defer dev.Halt()
+
+	// Read temperature from the sensor:
+	var env physic.Env
+	if err = dev.Sense(&env); err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("%8s %10s %9s\n", env.Temperature, env.Pressure, env.Humidity)
+
+	resp := pb.BME280Response{Temperature: env.Temperature.String(), Pressure: env.Pressure.String(), Humidity: env.Humidity.String()}
+	return &resp, nil
+}
+
 func newServer() *terragpioserver {
 	s := &terragpioserver{}
 	s.Pins = make(map[string]pinState)
@@ -95,8 +125,9 @@ func (s *terragpioserver) genPWMResponse() (response pb.PWMResponse) {
 func main() {
 	flag.Parse()
 	host.Init()
+	/*fmt.Printf("Pi? %v \n\n", rpi.Present())
 	fmt.Printf("Available Pins: %+v \n\n", gpioreg.All())
-	fmt.Printf("Pi? %v \n\n", rpi.Present())
+	fmt.Printf("I2C Busses: %+v \n\n", i2creg.All())*/
 
 	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", *port))
 	if err != nil {

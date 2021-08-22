@@ -32,11 +32,25 @@ func setPWM(client pb.SetgpioClient, settings *pb.PWMRequest) {
 	fmt.Println(actualsettings)
 }
 
+func SetBME280(client pb.SetgpioClient, settings *pb.BME280Request) {
+	fmt.Printf("Setting BME280 --> %+v \n", settings)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	actualsettings, err := client.SetBME280(ctx, settings)
+	if err != nil {
+		log.Fatalf("Error : ", client, err)
+	}
+	fmt.Println(actualsettings)
+}
+
 func main() {
 
 	pinPtr := flag.String("pin", "", "GPIO Pin")
 	dutyCyclePtr := flag.String("dutycycle", "", "Duty cycle")
 	freqPtr := flag.String("frequency", "", "Frequency")
+
+	I2Cbus := flag.String("I2Cbus", "1", "I2C Bus")        //Very likely "1" on a raspberry pi
+	I2Caddr := flag.Uint64("I2Caddr", 0x77, "I2C Address") //BME280 may also be 0x76
 
 	flag.Parse()
 
@@ -69,6 +83,11 @@ func main() {
 		Pin:       *pinPtr,       //"GPIO13",
 		Dutycycle: *dutyCyclePtr, //"100%",
 		Frequency: *freqPtr,      //"25000",
+	})
+
+	SetBME280(client, &pb.BME280Request{
+		I2Cbus:  *I2Cbus,
+		I2Caddr: *I2Caddr, // "0x76"
 	})
 
 }
