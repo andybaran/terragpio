@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"time"
 
 	pb "github.com/andybaran/fictional-goggles/terragpio"
 
@@ -16,6 +17,7 @@ import (
 	"periph.io/x/conn/v3/physic"
 	"periph.io/x/devices/v3/bmxx80"
 	"periph.io/x/host/v3"
+	"periph.io/x/host/v3/rpi"
 )
 
 var (
@@ -30,6 +32,9 @@ type pinState struct {
 	DutyCycle gpio.Duty
 	Frequency physic.Frequency
 }
+
+//ToDo: Add a i2C state struct
+
 type terragpioserver struct {
 	pb.UnimplementedSetgpioServer
 	Pins map[string]pinState
@@ -72,10 +77,10 @@ func (s *terragpioserver) SetPWM(ctx context.Context, settings *pb.PWMRequest) (
 	return &resp, nil
 }
 
-func (s *terragpioserver) SetBME280(ctx context.Context, settings *pb.BME280Request) (*pb.BME280Response, error) {
+func (s *terragpioserver) GetBME280(ctx context.Context, settings *pb.BME280Request) (*pb.BME280Response, error) {
 	fmt.Printf("settings: %+v \n\n", settings)
 
-	bus, err := i2creg.Open(settings.I2Cbus) // ToDo: This uses first found I2C bus; add option to specify bus
+	bus, err := i2creg.Open(settings.I2Cbus)
 	if err != nil {
 		log.Fatal(err)
 		return nil, err
@@ -125,9 +130,12 @@ func (s *terragpioserver) genPWMResponse() (response pb.PWMResponse) {
 func main() {
 	flag.Parse()
 	host.Init()
-	/*fmt.Printf("Pi? %v \n\n", rpi.Present())
+
+	fmt.Printf("Pi? %v \n\n", rpi.Present())
 	fmt.Printf("Available Pins: %+v \n\n", gpioreg.All())
-	fmt.Printf("I2C Busses: %+v \n\n", i2creg.All())*/
+	fmt.Printf("I2C Busses: %+v \n\n", i2creg.All())
+
+	myTicker := time.NewTicker(time.Second * 2)
 
 	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", *port))
 	if err != nil {
@@ -136,6 +144,13 @@ func main() {
 	var opts []grpc.ServerOption
 	grpcServer := grpc.NewServer(opts...)
 	pb.RegisterSetgpioServer(grpcServer, newServer())
-	grpcServer.Serve(lis)
+
+	go func() {
+		grpcServer.Serve(lis)
+	}()
+
+	for range myTicker.C {
+		fmt.Println("Hello world")
+	}
 
 }
