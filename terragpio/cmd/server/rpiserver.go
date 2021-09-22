@@ -9,8 +9,8 @@ import (
 	"time"
 
 	pb "github.com/andybaran/fictional-goggles/terragpio"
-
 	"google.golang.org/grpc"
+
 	"periph.io/x/conn/v3/gpio"
 	"periph.io/x/conn/v3/gpio/gpioreg"
 	"periph.io/x/conn/v3/i2c/i2creg"
@@ -127,6 +127,32 @@ func (s *terragpioserver) genPWMResponse() (response pb.PWMResponse) {
 
 }
 
+func boringBME() physic.Env {
+	bus, err := i2creg.Open("") //just open the first bus found
+	fmt.Println("i2c bus opened")
+	if err != nil {
+		panic(err)
+	}
+	defer bus.Close() ///*** for Katy...why won't defer do anything here?
+
+	dev, err := bmxx80.NewI2C(bus, uint16(0x77), &bmxx80.DefaultOpts) //0x77 is default for the bme280 I currently have
+	fmt.Println("ready to read values")
+	if err != nil {
+		panic(err)
+
+	}
+	defer dev.Halt()
+
+	// Read temperature from the sensor:
+	var env physic.Env
+	if err = dev.Sense(&env); err != nil {
+		panic(err)
+	}
+	fmt.Printf("%8s %10s %9s\n", env.Temperature, env.Pressure, env.Humidity)
+	fmt.Println("returning env")
+	return env
+}
+
 func main() {
 	flag.Parse()
 	host.Init()
@@ -134,8 +160,6 @@ func main() {
 	fmt.Printf("Pi? %v \n\n", rpi.Present())
 	fmt.Printf("Available Pins: %+v \n\n", gpioreg.All())
 	fmt.Printf("I2C Busses: %+v \n\n", i2creg.All())
-
-	myTicker := time.NewTicker(time.Second * 2)
 
 	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", *port))
 	if err != nil {
@@ -149,8 +173,19 @@ func main() {
 		grpcServer.Serve(lis)
 	}()
 
+	temperatureChan := make(chan physic.Temperature)
+
+	myTicker := time.NewTicker(time.Second * 2)
 	for range myTicker.C {
-		fmt.Println("Hello world")
+
 	}
 
 }
+
+/* 1) get temperature read working (i2c bus, etc)
+2) send value to temperatureChan
+3) go routine parallel to read from temperatureChan...start this before time loop...needs to be go routine not just a func
+4) read and log value
+5) then how do we transform that to a fan speed
+6) set fan speed
+*/
