@@ -127,30 +127,39 @@ func (s *terragpioserver) genPWMResponse() (response pb.PWMResponse) {
 
 }
 
-func boringBME() physic.Env {
+func boringBME() (physic.Temperature, error) {
 	bus, err := i2creg.Open("") //just open the first bus found
 	fmt.Println("i2c bus opened")
 	if err != nil {
-		panic(err)
+		return 0, err
 	}
-	defer bus.Close() ///*** for Katy...why won't defer do anything here?
+	defer bus.Close()
 
 	dev, err := bmxx80.NewI2C(bus, uint16(0x77), &bmxx80.DefaultOpts) //0x77 is default for the bme280 I currently have
 	fmt.Println("ready to read values")
 	if err != nil {
-		panic(err)
-
+		return 0, err
 	}
 	defer dev.Halt()
 
 	// Read temperature from the sensor:
 	var env physic.Env
 	if err = dev.Sense(&env); err != nil {
-		panic(err)
+		return 0, err
 	}
 	fmt.Printf("%8s %10s %9s\n", env.Temperature, env.Pressure, env.Humidity)
 	fmt.Println("returning env")
-	return env
+	return env.Temperature, nil
+}
+
+func setFanSpeed(d gpio.Duty, f physic.Frequency, p gpio.PinIO) error {
+
+	if err := p.PWM(d, f); err != nil {
+		println(err)
+		return err
+	}
+	return nil
+
 }
 
 func main() {
@@ -169,20 +178,49 @@ func main() {
 	grpcServer := grpc.NewServer(opts...)
 	pb.RegisterSetgpioServer(grpcServer, newServer())
 
+	// Listen for client connections
 	go func() {
 		grpcServer.Serve(lis)
 	}()
 
+	// Make channel to recieve temperature reading and start a thread
 	temperatureChan := make(chan physic.Temperature)
+	go func() {
+		for t := range temperatureChan {
+			fmt.Println(t)
+		}
+	}()
+	
+	// Calculate curve
+	//// I need a struct or something here so I can get my min and max readings to calc point on the slope
+	calculateOutput := make(chan physic.Temperature)
+	go func() {
+		for c := range calculateOutput {
 
+		}
+	}
+
+	setDutyCycle := make(chan gpio.Duty)
+	go func() {
+		setFanSpeed("50%", 25000, GPIO13)
+	}()
+
+	/* Loop every 2 seconds
+	Read temp from boringBME()
+	Write temp to temp chan
+	*/
 	myTicker := time.NewTicker(time.Second * 2)
 	for range myTicker.C {
-
+		actualTemp, err := boringBME()
+		if err != nil {
+			panic(err)
+		}
+		temperatureChan <- actualTemp
 	}
 
 }
 
-/* 1) get temperature read working (i2c bus, etc)
+/* 1) boringBME get temperature read working (i2c bus, etc)
 2) send value to temperatureChan
 3) go routine parallel to read from temperatureChan...start this before time loop...needs to be go routine not just a func
 4) read and log value
