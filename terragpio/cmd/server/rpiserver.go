@@ -127,7 +127,7 @@ func (s *terragpioserver) genPWMResponse() (response pb.PWMResponse) {
 
 }
 
-func boringBME() (physic.Temperature, error) {
+func readBME() (physic.Temperature, error) {
 	bus, err := i2creg.Open("") //just open the first bus found
 	fmt.Println("i2c bus opened")
 	if err != nil {
@@ -152,7 +152,7 @@ func boringBME() (physic.Temperature, error) {
 	return env.Temperature, nil
 }
 
-func setFanSpeed(d gpio.Duty, f physic.Frequency, p gpio.PinIO) error {
+func setPWMDutyCycle(d gpio.Duty, f physic.Frequency, p gpio.PinIO) error {
 
 	if err := p.PWM(d, f); err != nil {
 		println(err)
@@ -185,33 +185,50 @@ func main() {
 
 	// Make channel to recieve temperature reading and start a thread
 	temperatureChan := make(chan physic.Temperature)
+	calculateOutput := make(chan physic.Temperature)
+	setDutyCycle := make(chan gpio.Duty)
 	go func() {
 		for t := range temperatureChan {
+			calculateOutput <- t
 			fmt.Println(t)
 		}
 	}()
-	
+
 	// Calculate curve
-	//// I need a struct or something here so I can get my min and max readings to calc point on the slope
-	calculateOutput := make(chan physic.Temperature)
+	//// I need a struct here that can pass in the max's and min's
 	go func() {
 		for c := range calculateOutput {
+			//// temperature range in celsius
+			var tMax int = 35
+			var tMin int = 0
 
+			//// might as well make duty cycle configurable too
+			var dMax int = 100
+			var dMin int = 0
+
+			//calculate our slope
+			s := (tMax - tMin) / (dMax - dMin)
+
+			//calculate duty cycle (y axis using y = mx+b)
+			setDutyCycle <- gpio.Duty((s*(tMax) - int(c.Celsius()) + dMax))
 		}
-	}
+	}()
 
-	setDutyCycle := make(chan gpio.Duty)
 	go func() {
-		setFanSpeed("50%", 25000, GPIO13)
+		d, err := gpio.ParseDuty("50%")
+		if err != nil {
+			println(err)
+		}
+		setPWMDutyCycle(d, 25000, gpioreg.ByName("GPIO13"))
 	}()
 
 	/* Loop every 2 seconds
-	Read temp from boringBME()
-	Write temp to temp chan
+	Read temp from readBME()
+	Write temp to temperatureChan
 	*/
 	myTicker := time.NewTicker(time.Second * 2)
 	for range myTicker.C {
-		actualTemp, err := boringBME()
+		actualTemp, err := readBME()
 		if err != nil {
 			panic(err)
 		}
@@ -220,7 +237,7 @@ func main() {
 
 }
 
-/* 1) boringBME get temperature read working (i2c bus, etc)
+/* 1) readBME get temperature read working (i2c bus, etc)
 2) send value to temperatureChan
 3) go routine parallel to read from temperatureChan...start this before time loop...needs to be go routine not just a func
 4) read and log value
