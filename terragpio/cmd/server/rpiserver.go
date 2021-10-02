@@ -209,10 +209,11 @@ func main() {
 			var dMin int = 20
 
 			//calculate our slope
-			s := (dMax - tMax) / (dMin - tMin)
+			s := (tMax - dMax) / (tMin - dMin)
 
 			d := (s*(tMax) - int(c.Celsius()) + dMax)
 			//calculate duty cycle (y axis using y = mx+b)
+			print("d = ", d)
 			setPWMDutyCycle(gpio.Duty(d),
 				25000,
 				gpioreg.ByName("GPIO13"))
