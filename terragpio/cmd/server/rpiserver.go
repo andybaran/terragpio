@@ -240,7 +240,7 @@ func main() {
 			panic(err)
 		}
 		temperatureChan <- actualTemp
-		println("sending actual temp")
+		println("temp = ", actualTemp.String())
 	}
 
 }
