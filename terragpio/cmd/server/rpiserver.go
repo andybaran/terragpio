@@ -129,14 +129,14 @@ func (s *terragpioserver) genPWMResponse() (response pb.PWMResponse) {
 
 func readBME() (physic.Temperature, error) {
 	bus, err := i2creg.Open("") //just open the first bus found
-	fmt.Println("i2c bus opened")
+	//fmt.Println("i2c bus opened")
 	if err != nil {
 		return 0, err
 	}
 	defer bus.Close()
 
 	dev, err := bmxx80.NewI2C(bus, uint16(0x77), &bmxx80.DefaultOpts) //0x77 is default for the bme280 I currently have
-	fmt.Println("ready to read values")
+	//fmt.Println("ready to read values")
 	if err != nil {
 		return 0, err
 	}
@@ -147,8 +147,8 @@ func readBME() (physic.Temperature, error) {
 	if err = dev.Sense(&env); err != nil {
 		return 0, err
 	}
-	fmt.Printf("%8s %10s %9s\n", env.Temperature, env.Pressure, env.Humidity)
-	fmt.Println("returning env")
+	//	fmt.Printf("%8s %10s %9s\n", env.Temperature, env.Pressure, env.Humidity)
+	//	fmt.Println("returning env")
 	return env.Temperature, nil
 }
 
@@ -192,7 +192,7 @@ func main() {
 	go func() {
 		for t := range temperatureChan {
 			calculateOutput <- t
-			fmt.Println("Recieved temperature of: ", t)
+			//fmt.Println("Recieved temperature of: ", t)
 		}
 	}()
 
@@ -210,10 +210,10 @@ func main() {
 
 			//calculate our slope
 			s := (tMax - dMax) / (tMin - dMin)
+			println("s = ", s)
 
-			d := (s*(tMax) - int(c.Celsius()) + dMax)
+			d := (s*(int(c.Celsius())-tMax) + dMax)
 			//calculate duty cycle (y axis using y = mx+b)
-			print("d = ", d)
 			setPWMDutyCycle(gpio.Duty(d),
 				25000,
 				gpioreg.ByName("GPIO13"))
