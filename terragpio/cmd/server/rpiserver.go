@@ -202,11 +202,11 @@ func main() {
 		for c := range calculateOutput {
 			//// temperature range in celsius (x)
 			var tMax int = 35
-			var tMin int = 0
+			var tMin int = 5
 
 			//// might as well make duty cycle configurable too (y)
 			var dMax int = 100
-			var dMin int = 0
+			var dMin int = 20
 
 			//calculate our slope
 			s := (dMax - tMax) / (dMin - tMin)
