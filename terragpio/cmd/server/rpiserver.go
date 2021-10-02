@@ -158,6 +158,7 @@ func setPWMDutyCycle(d gpio.Duty, f physic.Frequency, p gpio.PinIO) error {
 		println(err)
 		return err
 	}
+	println("duty cycle % = ", d)
 	return nil
 
 }
@@ -183,14 +184,15 @@ func main() {
 		grpcServer.Serve(lis)
 	}()
 
-	// Make channel to recieve temperature reading and start a thread
+	// Make some channels
 	temperatureChan := make(chan physic.Temperature)
 	calculateOutput := make(chan physic.Temperature)
-	setDutyCycle := make(chan gpio.Duty)
+	//	setDutyCycle := make(chan gpio.Duty)
+
 	go func() {
 		for t := range temperatureChan {
 			calculateOutput <- t
-			fmt.Println(t)
+			fmt.Println("Recieved temperature of: ", t)
 		}
 	}()
 
@@ -198,29 +200,33 @@ func main() {
 	//// I need a struct here that can pass in the max's and min's
 	go func() {
 		for c := range calculateOutput {
-			//// temperature range in celsius
+			//// temperature range in celsius (x)
 			var tMax int = 35
 			var tMin int = 0
 
-			//// might as well make duty cycle configurable too
+			//// might as well make duty cycle configurable too (y)
 			var dMax int = 100
 			var dMin int = 0
 
 			//calculate our slope
-			s := (tMax - tMin) / (dMax - dMin)
+			s := (dMax - tMax) / (dMin - tMin)
 
+			d := (s*(tMax) - int(c.Celsius()) + dMax)
 			//calculate duty cycle (y axis using y = mx+b)
-			setDutyCycle <- gpio.Duty((s*(tMax) - int(c.Celsius()) + dMax))
+			setPWMDutyCycle(gpio.Duty(d),
+				25000,
+				gpioreg.ByName("GPIO13"))
+			//setDutyCycle <- gpio.Duty((s*(tMax) - int(c.Celsius()) + dMax))
 		}
 	}()
 
-	go func() {
-		d, err := gpio.ParseDuty("50%")
+	/*go func() {
+		d := string(setDutyCycle)
 		if err != nil {
 			println(err)
 		}
 		setPWMDutyCycle(d, 25000, gpioreg.ByName("GPIO13"))
-	}()
+	}()*/
 
 	/* Loop every 2 seconds
 	Read temp from readBME()
@@ -233,6 +239,7 @@ func main() {
 			panic(err)
 		}
 		temperatureChan <- actualTemp
+		println("sending actual temp")
 	}
 
 }
