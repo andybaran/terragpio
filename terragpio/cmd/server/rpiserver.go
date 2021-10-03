@@ -158,7 +158,8 @@ func setPWMDutyCycle(d gpio.Duty, f physic.Frequency, p gpio.PinIO) error {
 		println(err)
 		return err
 	}
-	println("duty cycle % = ", d, "\n")
+	println("duty cycle: ", d)
+	println()
 	return nil
 
 }
