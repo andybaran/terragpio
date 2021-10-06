@@ -29,3 +29,20 @@ message BME280Response {
     string humidity = 2;
     string pressure = 3;
 }
+
+message FanControllerRequest {
+    uint64 temperatureMax = 1;
+    uint64 temperatureMin = 2;
+    uint64 dutyCycleMax = 3;
+    uint64 dutyCycleMin = 4;
+    string fanPin = 5;
+    string fanFrequency = 6;
+    string I2Caddr = 7;
+    string I2Cbus = 8;
+    uint64 timeInterval = 9;
+}
+
+message FanControllerResponse {
+  //ToDo: Read more about GRPC status
+  // https://cloud.google.com/apis/design/errors#error_model  
+}
