@@ -246,10 +246,4 @@ func main() {
 
 }
 
-/* 1) readBME get temperature read working (i2c bus, etc)
-2) send value to temperatureChan
-3) go routine parallel to read from temperatureChan...start this before time loop...needs to be go routine not just a func
-4) read and log value
-5) then how do we transform that to a fan speed
-6) set fan speed
-*/
+
