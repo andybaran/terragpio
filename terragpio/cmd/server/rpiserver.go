@@ -105,6 +105,24 @@ func (s *terragpioserver) GetBME280(ctx context.Context, settings *pb.BME280Requ
 	return &resp, nil
 }
 
+func (s *terragpioserver) SetFanController(ctx context.Context, settings *pb.FanControllerRequest) (*pb.FanControllerResponse, error) {
+
+	//calculate our slope
+	slope := (int(settings.TemperatureMax) - int(settings.DutyCycleMax)) / (int(settings.TemperatureMin) - int(settings.DutyCycleMin))
+	println("s = ", slope)
+
+	/* We want to start a loop here that gets the temp and sets the duty cycle
+	*  However, we don't want to be in a blocking loop so the loop can be brought into a go routine
+	 */
+
+	d := (slope*(int(c.Celsius())-tMax) + dMax)
+	//calculate duty cycle (y axis using y = mx+b)
+	setPWMDutyCycle(gpio.Duty(d),
+		25000,
+		gpioreg.ByName("GPIO13"))
+
+}
+
 func newServer() *terragpioserver {
 	s := &terragpioserver{}
 	s.Pins = make(map[string]pinState)
@@ -245,5 +263,3 @@ func main() {
 	}
 
 }
-
-
