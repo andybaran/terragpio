@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"time"
 
 	pb "github.com/andybaran/fictional-goggles/terragpio"
 	"google.golang.org/grpc"
@@ -105,16 +104,19 @@ func (s *terragpioserver) GetBME280(ctx context.Context, settings *pb.BME280Requ
 	return &resp, nil
 }
 
-func (s *terragpioserver) PWMDutyCycleOutput_BME280TempInput(ctx context.Context, settings *pb.FanControllerRequest) *pb.FanControllerResponse {
+func (s *terragpioserver) PWMDutyCycleOutput_BME280TempInput(ctx context.Context, settings *pb.FanControllerRequest) (*pb.FanControllerResponse, error) {
 	//setup the PWM device
 	s.SetPWM(ctx, settings.FanDevice)
 
 	//setup the BME280
 	// ToDo : Should have SetBME280 and a SenseBME280...not all in one
-	r := s.GetBME280(ctx, settings.BME280Device)
+	r, err := s.GetBME280(ctx, settings.BME280Device)
+	if err != nil {
+		panic(err)
+	}
 
 	//calculate our slope
-	slope := (int(settings.TemperatureMax) - int(settings.DutyCycleMax)) / (int(settings.TemperatureMin) - int(settings.DutyCycleMin))
+	slope := (settings.TemperatureMax - settings.DutyCycleMax) / (settings.TemperatureMin - settings.DutyCycleMin)
 	println("s = ", slope)
 
 	/* We want to start a loop here that gets the temp and sets the duty cycle
@@ -122,31 +124,39 @@ func (s *terragpioserver) PWMDutyCycleOutput_BME280TempInput(ctx context.Context
 	 */
 
 	//calculate duty cycle (y axis using y = mx+b)
-	d := (slope*(int(c.Celsius())-int(settings.TemperatureMax)) + settings.DutyCycleMax)
+	var t physic.Temperature
+	t.Set(r.Temperature)
+	d := (slope*(uint64(t.Celsius())-settings.TemperatureMax) + settings.DutyCycleMax)
 
 	//set the dutycycle
+
+	var f physic.Frequency
+	f.Set(settings.FanDevice.Frequency)
 	setPWMDutyCycle(gpio.Duty(d),
-		25000,
-		gpioreg.ByName("GPIO13"))
+		f,
+		gpioreg.ByName(settings.FanDevice.Pin))
+
+	resp := pb.FanControllerResponse{}
+	return &resp, nil
 }
 
-func (s *terragpioserver) SetFanController(ctx context.Context, settings *pb.FanControllerRequest) (*pb.FanControllerResponse, error) {
+/* func (s *terragpioserver) SetFanController(ctx context.Context, settings *pb.FanControllerRequest) (*pb.FanControllerResponse, error) {
 
-	//calculate our slope
-	slope := (int(settings.TemperatureMax) - int(settings.DutyCycleMax)) / (int(settings.TemperatureMin) - int(settings.DutyCycleMin))
-	println("s = ", slope)
+//calculate our slope
+slope := (int(settings.TemperatureMax) - int(settings.DutyCycleMax)) / (int(settings.TemperatureMin) - int(settings.DutyCycleMin))
+println("s = ", slope)
 
-	/* We want to start a loop here that gets the temp and sets the duty cycle
-	*  However, we don't want to be in a blocking loop so the loop can be brought into a go routine
-	 */
+/* We want to start a loop here that gets the temp and sets the duty cycle
+*  However, we don't want to be in a blocking loop so the loop can be brought into a go routine
+*/
 
-	d := (slope*(int(c.Celsius())-tMax) + dMax)
+/*d := (slope*(int(c.Celsius())-tMax) + dMax)
 	//calculate duty cycle (y axis using y = mx+b)
 	setPWMDutyCycle(gpio.Duty(d),
 		25000,
 		gpioreg.ByName("GPIO13"))
 
-}
+} */
 
 func newServer() *terragpioserver {
 	s := &terragpioserver{}
@@ -276,7 +286,7 @@ func main() {
 	/* Loop every 2 seconds
 	Read temp from readBME()
 	Write temp to temperatureChan
-	*/
+
 	myTicker := time.NewTicker(time.Second * 2)
 	for range myTicker.C {
 		actualTemp, err := readBME()
@@ -286,5 +296,5 @@ func main() {
 		temperatureChan <- actualTemp
 		println("temp = ", actualTemp.String())
 	}
-
+	*/
 }
