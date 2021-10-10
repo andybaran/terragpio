@@ -7,6 +7,7 @@ package terragpio;
 service setgpio {
     rpc SetPWM(PWMRequest) returns(PWMResponse) {}
     rpc SetBME280(BME280Request) returns(BME280Response) {}
+    rpc PWMDutyCycleOutput_BME280TempInput(FanControllerRequest) returns(FanControllerResponse) {}
 }
 
 message PWMRequest {
@@ -32,14 +33,16 @@ message BME280Response {
 
 message FanControllerRequest {
     uint64 timeInterval = 1;
-    string I2Caddr = 2;
-    string I2Cbus = 3;
-    uint64 temperatureMax = 4;
-    uint64 temperatureMin = 5;
-    string fanPin = 6;
-    string fanFrequency = 7;
-    uint64 dutyCycleMax = 8;
-    uint64 dutyCycleMin = 9;    
+/*     string I2Caddr = 2;
+    string I2Cbus = 3; */
+    optional BME280Request BME280Device = 2;
+    uint64 temperatureMax = 3;
+    uint64 temperatureMin = 4;
+/*     string fanPin = 6;
+    string fanFrequency = 7; */
+    optional PWMRequest fanDevice = 5; 
+    uint64 dutyCycleMax = 6;
+    uint64 dutyCycleMin = 7;    
 }
 
 message FanControllerResponse {

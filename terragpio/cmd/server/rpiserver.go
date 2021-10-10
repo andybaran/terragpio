@@ -105,6 +105,31 @@ func (s *terragpioserver) GetBME280(ctx context.Context, settings *pb.BME280Requ
 	return &resp, nil
 }
 
+func (s *terragpioserver) PWMDutyCycleOutput_BME280TempInput(ctx context.Context, settings *pb.FanControllerRequest) *pb.FanControllerResponse {
+	//setup the PWM device
+	s.SetPWM(ctx, settings.FanDevice)
+
+	//setup the BME280
+	// ToDo : Should have SetBME280 and a SenseBME280...not all in one
+	r := s.GetBME280(ctx, settings.BME280Device)
+
+	//calculate our slope
+	slope := (int(settings.TemperatureMax) - int(settings.DutyCycleMax)) / (int(settings.TemperatureMin) - int(settings.DutyCycleMin))
+	println("s = ", slope)
+
+	/* We want to start a loop here that gets the temp and sets the duty cycle
+	*  However, we don't want to be in a blocking loop so the loop can be brought into a go routine
+	 */
+
+	//calculate duty cycle (y axis using y = mx+b)
+	d := (slope*(int(c.Celsius())-int(settings.TemperatureMax)) + settings.DutyCycleMax)
+
+	//set the dutycycle
+	setPWMDutyCycle(gpio.Duty(d),
+		25000,
+		gpioreg.ByName("GPIO13"))
+}
+
 func (s *terragpioserver) SetFanController(ctx context.Context, settings *pb.FanControllerRequest) (*pb.FanControllerResponse, error) {
 
 	//calculate our slope
@@ -145,7 +170,7 @@ func (s *terragpioserver) genPWMResponse() (response pb.PWMResponse) {
 
 }
 
-func readBME() (physic.Temperature, error) {
+/* func readBME() (physic.Temperature, error) {
 	bus, err := i2creg.Open("") //just open the first bus found
 	//fmt.Println("i2c bus opened")
 	if err != nil {
@@ -169,7 +194,7 @@ func readBME() (physic.Temperature, error) {
 	//	fmt.Println("returning env")
 	return env.Temperature, nil
 }
-
+*/
 func setPWMDutyCycle(d gpio.Duty, f physic.Frequency, p gpio.PinIO) error {
 
 	if err := p.PWM(d, f); err != nil {
