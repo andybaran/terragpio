@@ -31,15 +31,15 @@ message BME280Response {
 }
 
 message FanControllerRequest {
-    uint64 temperatureMax = 1;
-    uint64 temperatureMin = 2;
-    uint64 dutyCycleMax = 3;
-    uint64 dutyCycleMin = 4;
-    string fanPin = 5;
-    string fanFrequency = 6;
-    string I2Caddr = 7;
-    string I2Cbus = 8;
-    uint64 timeInterval = 9;
+    uint64 timeInterval = 1;
+    string I2Caddr = 2;
+    string I2Cbus = 3;
+    uint64 temperatureMax = 4;
+    uint64 temperatureMin = 5;
+    string fanPin = 6;
+    string fanFrequency = 7;
+    uint64 dutyCycleMax = 8;
+    uint64 dutyCycleMin = 9;    
 }
 
 message FanControllerResponse {
