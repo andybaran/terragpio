@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os/exec"
 
 	pb "github.com/andybaran/fictional-goggles/terragpio"
 	"google.golang.org/grpc"
@@ -275,6 +276,13 @@ func main() {
 		}
 	}()
 
+	cmd := exec.Command("echo", "hello")
+	cmdOutput, err := cmd.Output()
+	if err != nil {
+		panic("did not get cmd output")
+	}
+
+	println(string(cmdOutput))
 	/*go func() {
 		d := string(setDutyCycle)
 		if err != nil {
