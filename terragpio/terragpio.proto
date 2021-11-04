@@ -31,6 +31,7 @@ message BME280Response {
     string pressure = 3;
 }
 
+
 message FanControllerRequest {
     uint64 timeInterval = 1;
     optional BME280Request BME280Device = 2;

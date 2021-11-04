@@ -305,7 +305,7 @@ func (x *FanControllerRequest) GetTimeInterval() uint64 {
 	return 0
 }
 
-func (x *FanControllerRequest) GetBME280Device() *BME280Request {
+func (x *FanControllerRequest) SenseBME280Device() *BME280Request {
 	if x != nil {
 		return x.BME280Device
 	}

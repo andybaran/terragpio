@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"os/exec"
+	"time"
 
 	pb "github.com/andybaran/fictional-goggles/terragpio"
 	"google.golang.org/grpc"
@@ -20,6 +20,10 @@ import (
 	"periph.io/x/host/v3/rpi"
 )
 
+/*
+	Common vars for use in authenticaiton if needed; currently not using.
+	ToDo: Maybe make it possible to do this with vault?
+*/
 var (
 	tls        = flag.Bool("tls", false, "Connection uses TLS if true, else plain TCP")
 	certFile   = flag.String("cert_file", "", "The TLS cert file")
@@ -28,18 +32,26 @@ var (
 	port       = flag.Int("port", 10001, "The server port")
 )
 
+/*
+	Struct to represet a GPIO pin.
+	Currently only using PWM so the only important fiels are
+		duty cycle (gpio.Duty)
+		frequency (phsyic.Frequency)
+*/
 type pinState struct {
 	DutyCycle gpio.Duty
 	Frequency physic.Frequency
 }
 
-//ToDo: Add a i2C state struct
-
+/*
+Our server with a map to represent our pins
+*/
 type terragpioserver struct {
 	pb.UnimplementedSetgpioServer
 	Pins map[string]pinState
 }
 
+// Set frequency and duty cycle on a pin
 func (s *terragpioserver) SetPWM(ctx context.Context, settings *pb.PWMRequest) (*pb.PWMResponse, error) {
 
 	fmt.Printf("settings: %+v \n\n", settings)
@@ -77,7 +89,8 @@ func (s *terragpioserver) SetPWM(ctx context.Context, settings *pb.PWMRequest) (
 	return &resp, nil
 }
 
-func (s *terragpioserver) GetBME280(ctx context.Context, settings *pb.BME280Request) (*pb.BME280Response, error) {
+// Return temperature, pressure and humidity readings from a BME280 sensor connected via i2c
+func (s *terragpioserver) SenseBME280(ctx context.Context, settings *pb.BME280Request) (*pb.BME280Response, error) {
 	fmt.Printf("settings: %+v \n\n", settings)
 
 	bus, err := i2creg.Open(settings.I2Cbus)
@@ -105,59 +118,52 @@ func (s *terragpioserver) GetBME280(ctx context.Context, settings *pb.BME280Requ
 	return &resp, nil
 }
 
+// Set duty cycle on a pin based on the temperature reading from a BME280
 func (s *terragpioserver) PWMDutyCycleOutput_BME280TempInput(ctx context.Context, settings *pb.FanControllerRequest) (*pb.FanControllerResponse, error) {
 	//setup the PWM device
 	s.SetPWM(ctx, settings.FanDevice)
 
-	//setup the BME280
-	// ToDo : Should have SetBME280 and a SenseBME280...not all in one
-	r, err := s.GetBME280(ctx, settings.BME280Device)
-	if err != nil {
-		panic(err)
-	}
-
-	//calculate our slope
+	/* Calculate slope so we that when given max and min duty cycle settings and temperature readings.
+	*  We use this to calculate duty cycle (d) based on temperature readings (r.Temperature).
+	*/
 	slope := (settings.TemperatureMax - settings.DutyCycleMax) / (settings.TemperatureMin - settings.DutyCycleMin)
-	println("s = ", slope)
+	
+	//Setup the temperature value so we can use it in 
+	var t physic.Temperature
+	
+	var f physic.Frequency
 
 	/* We want to start a loop here that gets the temp and sets the duty cycle
 	*  However, we don't want to be in a blocking loop so the loop can be brought into a go routine
 	 */
 
-	//calculate duty cycle (y axis using y = mx+b)
-	var t physic.Temperature
-	t.Set(r.Temperature)
-	d := (slope*(uint64(t.Celsius())-settings.TemperatureMax) + settings.DutyCycleMax)
+	dutyCycleTicker := time.NewTicker(time.Second * settings.timeInterval)
+	for range dutyCycleTicker.C {
+		//read the values from the BME280
+		r, err := s.SenseBME280(ctx, settings.BME280Device)
+		if err != nil {
+			panic(err)
+		}
 
-	//set the dutycycle
+		/* Temperature value will be returned as a string like "10 C"
+		*  convert it to a physic.Temperature so we can convert it to a uint64 and do some math 
+		 */
+		t.Set(r.Temperature)
+		d := (slope*(uint64(t.Celsius())-settings.TemperatureMax) + settings.DutyCycleMax)
 
-	var f physic.Frequency
-	f.Set(settings.FanDevice.Frequency)
-	setPWMDutyCycle(gpio.Duty(d),
-		f,
-		gpioreg.ByName(settings.FanDevice.Pin))
+		//set the dutycycle
+		f.Set(settings.FanDevice.Frequency)
+		setPWMDutyCycle(gpio.Duty(d),
+			f,
+			gpioreg.ByName(settings.FanDevice.Pin))	
+
+	}
+	
+
 
 	resp := pb.FanControllerResponse{}
 	return &resp, nil
 }
-
-/* func (s *terragpioserver) SetFanController(ctx context.Context, settings *pb.FanControllerRequest) (*pb.FanControllerResponse, error) {
-
-//calculate our slope
-slope := (int(settings.TemperatureMax) - int(settings.DutyCycleMax)) / (int(settings.TemperatureMin) - int(settings.DutyCycleMin))
-println("s = ", slope)
-
-/* We want to start a loop here that gets the temp and sets the duty cycle
-*  However, we don't want to be in a blocking loop so the loop can be brought into a go routine
-*/
-
-/*d := (slope*(int(c.Celsius())-tMax) + dMax)
-	//calculate duty cycle (y axis using y = mx+b)
-	setPWMDutyCycle(gpio.Duty(d),
-		25000,
-		gpioreg.ByName("GPIO13"))
-
-} */
 
 func newServer() *terragpioserver {
 	s := &terragpioserver{}
@@ -169,7 +175,6 @@ func (s *terragpioserver) genPWMResponse() (response pb.PWMResponse) {
 
 	var err string
 	err = "notYet"
-	//what's special about "nil"?
 
 	if err != "notYet" {
 		response.Verified = false
@@ -178,34 +183,8 @@ func (s *terragpioserver) genPWMResponse() (response pb.PWMResponse) {
 
 	response.Verified = true
 	return response
-
 }
 
-/* func readBME() (physic.Temperature, error) {
-	bus, err := i2creg.Open("") //just open the first bus found
-	//fmt.Println("i2c bus opened")
-	if err != nil {
-		return 0, err
-	}
-	defer bus.Close()
-
-	dev, err := bmxx80.NewI2C(bus, uint16(0x77), &bmxx80.DefaultOpts) //0x77 is default for the bme280 I currently have
-	//fmt.Println("ready to read values")
-	if err != nil {
-		return 0, err
-	}
-	defer dev.Halt()
-
-	// Read temperature from the sensor:
-	var env physic.Env
-	if err = dev.Sense(&env); err != nil {
-		return 0, err
-	}
-	//	fmt.Printf("%8s %10s %9s\n", env.Temperature, env.Pressure, env.Humidity)
-	//	fmt.Println("returning env")
-	return env.Temperature, nil
-}
-*/
 func setPWMDutyCycle(d gpio.Duty, f physic.Frequency, p gpio.PinIO) error {
 
 	if err := p.PWM(d, f); err != nil {
@@ -215,7 +194,6 @@ func setPWMDutyCycle(d gpio.Duty, f physic.Frequency, p gpio.PinIO) error {
 	println("duty cycle: ", d)
 	println()
 	return nil
-
 }
 
 func main() {
@@ -253,7 +231,7 @@ func main() {
 
 	// Calculate curve
 	//// I need a struct here that can pass in the max's and min's
-	go func() {
+	/*go func() {
 		for c := range calculateOutput {
 			//// temperature range in celsius (x)
 			var tMax int = 35
@@ -273,16 +251,15 @@ func main() {
 				25000,
 				gpioreg.ByName("GPIO13"))
 			//setDutyCycle <- gpio.Duty((s*(tMax) - int(c.Celsius()) + dMax))
-		}
+		}*/
 	}()
 
-	cmd := exec.Command("echo", "hello")
-	cmdOutput, err := cmd.Output()
+	/*cmd := exec.Command("echo", "hello")
+	/cmdOutput, err := cmd.Output()
 	if err != nil {
 		panic("did not get cmd output")
 	}
-
-	println(string(cmdOutput))
+	println(string(cmdOutput))*/
 	/*go func() {
 		d := string(setDutyCycle)
 		if err != nil {
@@ -305,4 +282,3 @@ func main() {
 		println("temp = ", actualTemp.String())
 	}
 	*/
-}
