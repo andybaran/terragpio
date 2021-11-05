@@ -125,19 +125,22 @@ func (s *terragpioserver) PWMDutyCycleOutput_BME280TempInput(ctx context.Context
 
 	/* Calculate slope so we that when given max and min duty cycle settings and temperature readings.
 	*  We use this to calculate duty cycle (d) based on temperature readings (r.Temperature).
-	*/
+	 */
 	slope := (settings.TemperatureMax - settings.DutyCycleMax) / (settings.TemperatureMin - settings.DutyCycleMin)
-	
-	//Setup the temperature value so we can use it in 
+
+	//Setup the temperature value so we can use it in
 	var t physic.Temperature
-	
+
 	var f physic.Frequency
 
 	/* We want to start a loop here that gets the temp and sets the duty cycle
 	*  However, we don't want to be in a blocking loop so the loop can be brought into a go routine
 	 */
 
-	dutyCycleTicker := time.NewTicker(time.Second * settings.timeInterval)
+	//Convert the uint64 value in setttings.TimeInterval to time.Duration so we can convert to time.Second and use it as the input for our ticker
+	dutyCycleTicker := time.NewTicker(time.Second * time.Duration(settings.TimeInterval))
+
+	//start the ticker
 	for range dutyCycleTicker.C {
 		//read the values from the BME280
 		r, err := s.SenseBME280(ctx, settings.BME280Device)
@@ -146,7 +149,7 @@ func (s *terragpioserver) PWMDutyCycleOutput_BME280TempInput(ctx context.Context
 		}
 
 		/* Temperature value will be returned as a string like "10 C"
-		*  convert it to a physic.Temperature so we can convert it to a uint64 and do some math 
+		*  convert it to a physic.Temperature so we can convert it to a uint64 and do some math
 		 */
 		t.Set(r.Temperature)
 		d := (slope*(uint64(t.Celsius())-settings.TemperatureMax) + settings.DutyCycleMax)
@@ -155,11 +158,9 @@ func (s *terragpioserver) PWMDutyCycleOutput_BME280TempInput(ctx context.Context
 		f.Set(settings.FanDevice.Frequency)
 		setPWMDutyCycle(gpio.Duty(d),
 			f,
-			gpioreg.ByName(settings.FanDevice.Pin))	
+			gpioreg.ByName(settings.FanDevice.Pin))
 
 	}
-	
-
 
 	resp := pb.FanControllerResponse{}
 	return &resp, nil
@@ -228,57 +229,57 @@ func main() {
 			//fmt.Println("Recieved temperature of: ", t)
 		}
 	}()
+}
 
-	// Calculate curve
-	//// I need a struct here that can pass in the max's and min's
-	/*go func() {
-		for c := range calculateOutput {
-			//// temperature range in celsius (x)
-			var tMax int = 35
-			var tMin int = 5
+// Calculate curve
+//// I need a struct here that can pass in the max's and min's
+/*go func() {
+for c := range calculateOutput {
+	//// temperature range in celsius (x)
+	var tMax int = 35
+	var tMin int = 5
 
-			//// might as well make duty cycle configurable too (y)
-			var dMax int = 100
-			var dMin int = 20
+	//// might as well make duty cycle configurable too (y)
+	var dMax int = 100
+	var dMin int = 20
 
-			//calculate our slope
-			s := (tMax - dMax) / (tMin - dMin)
-			println("s = ", s)
+	//calculate our slope
+	s := (tMax - dMax) / (tMin - dMin)
+	println("s = ", s)
 
-			d := (s*(int(c.Celsius())-tMax) + dMax)
-			//calculate duty cycle (y axis using y = mx+b)
-			setPWMDutyCycle(gpio.Duty(d),
-				25000,
-				gpioreg.ByName("GPIO13"))
-			//setDutyCycle <- gpio.Duty((s*(tMax) - int(c.Celsius()) + dMax))
-		}*/
-	}()
+	d := (s*(int(c.Celsius())-tMax) + dMax)
+	//calculate duty cycle (y axis using y = mx+b)
+	setPWMDutyCycle(gpio.Duty(d),
+		25000,
+		gpioreg.ByName("GPIO13"))
+	//setDutyCycle <- gpio.Duty((s*(tMax) - int(c.Celsius()) + dMax))
+}*/
 
-	/*cmd := exec.Command("echo", "hello")
-	/cmdOutput, err := cmd.Output()
+/*cmd := exec.Command("echo", "hello")
+/cmdOutput, err := cmd.Output()
+if err != nil {
+	panic("did not get cmd output")
+}
+println(string(cmdOutput))*/
+/*go func() {
+	d := string(setDutyCycle)
 	if err != nil {
-		panic("did not get cmd output")
+		println(err)
 	}
-	println(string(cmdOutput))*/
-	/*go func() {
-		d := string(setDutyCycle)
-		if err != nil {
-			println(err)
-		}
-		setPWMDutyCycle(d, 25000, gpioreg.ByName("GPIO13"))
-	}()*/
+	setPWMDutyCycle(d, 25000, gpioreg.ByName("GPIO13"))
+}()*/
 
-	/* Loop every 2 seconds
-	Read temp from readBME()
-	Write temp to temperatureChan
+/* Loop every 2 seconds
+Read temp from readBME()
+Write temp to temperatureChan
 
-	myTicker := time.NewTicker(time.Second * 2)
-	for range myTicker.C {
-		actualTemp, err := readBME()
-		if err != nil {
-			panic(err)
-		}
-		temperatureChan <- actualTemp
-		println("temp = ", actualTemp.String())
+myTicker := time.NewTicker(time.Second * 2)
+for range myTicker.C {
+	actualTemp, err := readBME()
+	if err != nil {
+		panic(err)
 	}
-	*/
+	temperatureChan <- actualTemp
+	println("temp = ", actualTemp.String())
+}
+*/

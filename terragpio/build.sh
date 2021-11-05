@@ -1,3 +1,4 @@
+clear
 echo "*********** Reticulating Splines ***********"
 echo "Building"
 GOOS=linux GOARCH=arm go build -o ./server ./cmd/server/rpiserver.go 
