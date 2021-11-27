@@ -128,9 +128,8 @@ func (s *terragpioserver) PWMDutyCycleOutput_BME280TempInput(ctx context.Context
 	 */
 	slope := (settings.TemperatureMax - settings.DutyCycleMax) / (settings.TemperatureMin - settings.DutyCycleMin)
 
-	//Setup the temperature value so we can use it in
+	//Setup the temperature and frequency vars so we can use them later
 	var t physic.Temperature
-
 	var f physic.Frequency
 
 	/* We want to start a loop here that gets the temp and sets the duty cycle
@@ -214,72 +213,5 @@ func main() {
 	pb.RegisterSetgpioServer(grpcServer, newServer())
 
 	// Listen for client connections
-	go func() {
-		grpcServer.Serve(lis)
-	}()
-
-	// Make some channels
-	temperatureChan := make(chan physic.Temperature)
-	calculateOutput := make(chan physic.Temperature)
-	//	setDutyCycle := make(chan gpio.Duty)
-
-	go func() {
-		for t := range temperatureChan {
-			calculateOutput <- t
-			//fmt.Println("Recieved temperature of: ", t)
-		}
-	}()
+	grpcServer.Serve(lis)
 }
-
-// Calculate curve
-//// I need a struct here that can pass in the max's and min's
-/*go func() {
-for c := range calculateOutput {
-	//// temperature range in celsius (x)
-	var tMax int = 35
-	var tMin int = 5
-
-	//// might as well make duty cycle configurable too (y)
-	var dMax int = 100
-	var dMin int = 20
-
-	//calculate our slope
-	s := (tMax - dMax) / (tMin - dMin)
-	println("s = ", s)
-
-	d := (s*(int(c.Celsius())-tMax) + dMax)
-	//calculate duty cycle (y axis using y = mx+b)
-	setPWMDutyCycle(gpio.Duty(d),
-		25000,
-		gpioreg.ByName("GPIO13"))
-	//setDutyCycle <- gpio.Duty((s*(tMax) - int(c.Celsius()) + dMax))
-}*/
-
-/*cmd := exec.Command("echo", "hello")
-/cmdOutput, err := cmd.Output()
-if err != nil {
-	panic("did not get cmd output")
-}
-println(string(cmdOutput))*/
-/*go func() {
-	d := string(setDutyCycle)
-	if err != nil {
-		println(err)
-	}
-	setPWMDutyCycle(d, 25000, gpioreg.ByName("GPIO13"))
-}()*/
-
-/* Loop every 2 seconds
-Read temp from readBME()
-Write temp to temperatureChan
-
-myTicker := time.NewTicker(time.Second * 2)
-for range myTicker.C {
-	actualTemp, err := readBME()
-	if err != nil {
-		panic(err)
-	}
-	temperatureChan <- actualTemp
-	println("temp = ", actualTemp.String())
-}
-*/
