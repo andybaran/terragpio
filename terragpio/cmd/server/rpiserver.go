@@ -126,7 +126,7 @@ func (s *terragpioserver) PWMDutyCycleOutput_BME280TempInput(ctx context.Context
 	/* Calculate slope so we that when given max and min duty cycle settings and temperature readings.
 	*  We use this to calculate duty cycle (d) based on temperature readings (r.Temperature).
 	 */
-	slope := (settings.TemperatureMax - settings.DutyCycleMax) / (settings.TemperatureMin - settings.DutyCycleMin)
+	slope := (settings.DutyCycleMax - settings.DutyCycleMin) / (settings.TemperatureMax - settings.TemperatureMin)
 
 	//Setup the temperature and frequency vars so we can use them later
 	var t physic.Temperature
@@ -152,6 +152,7 @@ func (s *terragpioserver) PWMDutyCycleOutput_BME280TempInput(ctx context.Context
 		 */
 		t.Set(r.Temperature)
 		d := (slope*(uint64(t.Celsius())-settings.TemperatureMax) + settings.DutyCycleMax)
+		//d := settings.DutyCycleMax - (slope * (uint64(t.Celsius())))
 
 		//set the dutycycle
 		f.Set(settings.FanDevice.Frequency)
@@ -192,6 +193,7 @@ func setPWMDutyCycle(d gpio.Duty, f physic.Frequency, p gpio.PinIO) error {
 		return err
 	}
 	println("duty cycle: ", d)
+	println("frequency: ", f)
 	println()
 	return nil
 }
@@ -203,6 +205,8 @@ func main() {
 	fmt.Printf("Pi? %v \n\n", rpi.Present())
 	fmt.Printf("Available Pins: %+v \n\n", gpioreg.All())
 	fmt.Printf("I2C Busses: %+v \n\n", i2creg.All())
+
+	setPWMDutyCycle(gpio.Duty(100), physic.Frequency(25000), gpioreg.ByName(("GPIO13")))
 
 	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", *port))
 	if err != nil {
