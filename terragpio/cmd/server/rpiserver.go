@@ -34,7 +34,7 @@ var (
 
 /*
 	Struct to represet a GPIO pin.
-	Currently only using PWM so the only important fiels are
+	Currently only using PWM so the only important fields are
 		duty cycle (gpio.Duty)
 		frequency (phsyic.Frequency)
 */
