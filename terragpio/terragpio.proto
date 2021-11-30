@@ -13,7 +13,7 @@ service setgpio {
 message PWMRequest {
     string pin = 1; // expect the pin to be expressed in terms of GPIO standard (i.e. GPIO6) 
     string dutycycle = 2; // format is "nn%" where nn is 00 - 100
-    string frequency = 3; // format is "nM" where is Mega Hertz 
+    string frequency = 3; // format is "nM" where n is Mega Hertz 
 }
 
 message PWMResponse {
@@ -38,8 +38,8 @@ message FanControllerRequest {
     uint64 temperatureMax = 3;
     uint64 temperatureMin = 4;
     optional PWMRequest fanDevice = 5; 
-    uint64 dutyCycleMax = 6;
-    uint64 dutyCycleMin = 7;    
+    string dutyCycleMax = 6;
+    string dutyCycleMin = 7;    
 }
 
 message FanControllerResponse {

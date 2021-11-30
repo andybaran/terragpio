@@ -43,14 +43,34 @@ func SetBME280(client pb.SetgpioClient, settings *pb.BME280Request) {
 	fmt.Println(actualsettings)
 }
 
+func FanController(client pb.SetgpioClient, settings *pb.FanControllerRequest) {
+	fmt.Printf("Setting up a fan controller --> %+v \n", settings)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	actualsettings, err := client.PWMDutyCycleOutput_BME280TempInput(ctx, settings)
+	if err != nil {
+		log.Fatalf("Error : ", client, err)
+	}
+	fmt.Println(actualsettings)
+}
+
 func main() {
 
-	pinPtr := flag.String("pin", "", "GPIO Pin")
-	dutyCyclePtr := flag.String("dutycycle", "", "Duty cycle")
-	freqPtr := flag.String("frequency", "", "Frequency")
+	// Flags to setup a PWM device on a GPIO pin, likely a fan
+	pinPtr := flag.String("pin", "GPIO13", "GPIO Pin")
+	dutyCyclePtr := flag.String("dutycycle", "30%", "Duty cycle")
+	freqPtr := flag.String("frequency", "25000", "Frequency")
 
+	// Flags to setup I2C bus and deviee, like BME280 on bus 1
 	I2Cbus := flag.String("I2Cbus", "1", "I2C Bus")        //Very likely "1" on a raspberry pi
 	I2Caddr := flag.Uint64("I2Caddr", 0x77, "I2C Address") //BME280 may also be 0x76
+
+	// Flags to tie BME280 sensor and fan together
+	timeInterval := flag.Uint64("timeInterval", 1, "Time in seconds")
+	temperatureMax := flag.Uint64("temperatureMax", 15, "Max temp")
+	temperatureMin := flag.Uint64("temperatureMin", 27, "Min temp")
+	dutyCycleMax := flag.Uint64("dutyCycleMax", 90, "Max duty cycle")
+	dutyCycleMin := flag.Uint64("dutyCycleMin", 30, "Min duty cycle")
 
 	flag.Parse()
 
@@ -79,7 +99,7 @@ func main() {
 	client := pb.NewSetgpioClient(conn)
 
 	// Set PWM
-	setPWM(client, &pb.PWMRequest{
+	/*setPWM(client, &pb.PWMRequest{
 		Pin:       *pinPtr,       //"GPIO13",
 		Dutycycle: *dutyCyclePtr, //"100%",
 		Frequency: *freqPtr,      //"25000",
@@ -88,6 +108,22 @@ func main() {
 	SetBME280(client, &pb.BME280Request{
 		I2Cbus:  *I2Cbus,
 		I2Caddr: *I2Caddr, // "0x76"
-	})
+	})*/
 
+	FanController(client, &pb.FanControllerRequest{
+		TimeInterval: *timeInterval,
+		BME280Device: &pb.BME280Request{
+			I2Cbus:  *I2Cbus,
+			I2Caddr: *I2Caddr,
+		},
+		TemperatureMax: *temperatureMax,
+		TemperatureMin: *temperatureMin,
+		FanDevice: &pb.PWMRequest{
+			Pin:       *pinPtr,
+			Dutycycle: *dutyCyclePtr,
+			Frequency: *freqPtr,
+		},
+		DutyCycleMax: *dutyCycleMax,
+		DutyCycleMin: *dutyCycleMin,
+	})
 }
