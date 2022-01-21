@@ -18,6 +18,7 @@ import (
 	"periph.io/x/conn/v3/physic"
 	"periph.io/x/devices/v3/bmxx80"
 	"periph.io/x/host/v3"
+	"periph.io/x/host/v3/rpi"
 )
 
 /*
