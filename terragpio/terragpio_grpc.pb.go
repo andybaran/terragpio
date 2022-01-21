@@ -20,6 +20,10 @@ const _ = grpc.SupportPackageIsVersion7
 type SetgpioClient interface {
 	SetPWM(ctx context.Context, in *PWMRequest, opts ...grpc.CallOption) (*PWMResponse, error)
 	SetBME280(ctx context.Context, in *BME280Request, opts ...grpc.CallOption) (*BME280Response, error)
+<<<<<<< HEAD
+=======
+	PWMDutyCycleOutput_BME280TempInput(ctx context.Context, in *FanControllerRequest, opts ...grpc.CallOption) (*FanControllerResponse, error)
+>>>>>>> bme280
 }
 
 type setgpioClient struct {
@@ -48,12 +52,28 @@ func (c *setgpioClient) SetBME280(ctx context.Context, in *BME280Request, opts .
 	return out, nil
 }
 
+<<<<<<< HEAD
+=======
+func (c *setgpioClient) PWMDutyCycleOutput_BME280TempInput(ctx context.Context, in *FanControllerRequest, opts ...grpc.CallOption) (*FanControllerResponse, error) {
+	out := new(FanControllerResponse)
+	err := c.cc.Invoke(ctx, "/terragpio.setgpio/PWMDutyCycleOutput_BME280TempInput", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+>>>>>>> bme280
 // SetgpioServer is the server API for Setgpio service.
 // All implementations must embed UnimplementedSetgpioServer
 // for forward compatibility
 type SetgpioServer interface {
 	SetPWM(context.Context, *PWMRequest) (*PWMResponse, error)
 	SetBME280(context.Context, *BME280Request) (*BME280Response, error)
+<<<<<<< HEAD
+=======
+	PWMDutyCycleOutput_BME280TempInput(context.Context, *FanControllerRequest) (*FanControllerResponse, error)
+>>>>>>> bme280
 	mustEmbedUnimplementedSetgpioServer()
 }
 
@@ -67,6 +87,12 @@ func (UnimplementedSetgpioServer) SetPWM(context.Context, *PWMRequest) (*PWMResp
 func (UnimplementedSetgpioServer) SetBME280(context.Context, *BME280Request) (*BME280Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetBME280 not implemented")
 }
+<<<<<<< HEAD
+=======
+func (UnimplementedSetgpioServer) PWMDutyCycleOutput_BME280TempInput(context.Context, *FanControllerRequest) (*FanControllerResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PWMDutyCycleOutput_BME280TempInput not implemented")
+}
+>>>>>>> bme280
 func (UnimplementedSetgpioServer) mustEmbedUnimplementedSetgpioServer() {}
 
 // UnsafeSetgpioServer may be embedded to opt out of forward compatibility for this service.
@@ -116,6 +142,27 @@ func _Setgpio_SetBME280_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+<<<<<<< HEAD
+=======
+func _Setgpio_PWMDutyCycleOutput_BME280TempInput_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FanControllerRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SetgpioServer).PWMDutyCycleOutput_BME280TempInput(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/terragpio.setgpio/PWMDutyCycleOutput_BME280TempInput",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SetgpioServer).PWMDutyCycleOutput_BME280TempInput(ctx, req.(*FanControllerRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+>>>>>>> bme280
 // Setgpio_ServiceDesc is the grpc.ServiceDesc for Setgpio service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -131,6 +178,13 @@ var Setgpio_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "SetBME280",
 			Handler:    _Setgpio_SetBME280_Handler,
 		},
+<<<<<<< HEAD
+=======
+		{
+			MethodName: "PWMDutyCycleOutput_BME280TempInput",
+			Handler:    _Setgpio_PWMDutyCycleOutput_BME280TempInput_Handler,
+		},
+>>>>>>> bme280
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "terragpio.proto",

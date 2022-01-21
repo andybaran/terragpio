@@ -6,10 +6,12 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"strconv"
+	"time"
 
 	pb "github.com/andybaran/fictional-goggles/terragpio"
-
 	"google.golang.org/grpc"
+
 	"periph.io/x/conn/v3/gpio"
 	"periph.io/x/conn/v3/gpio/gpioreg"
 	"periph.io/x/conn/v3/i2c/i2creg"
@@ -18,6 +20,10 @@ import (
 	"periph.io/x/host/v3"
 )
 
+/*
+	Common vars for use in authenticaiton if needed; currently not using.
+	ToDo: Maybe make it possible to do this with vault?
+*/
 var (
 	tls        = flag.Bool("tls", false, "Connection uses TLS if true, else plain TCP")
 	certFile   = flag.String("cert_file", "", "The TLS cert file")
@@ -26,15 +32,26 @@ var (
 	port       = flag.Int("port", 10001, "The server port")
 )
 
+/*
+	Struct to represet a GPIO pin.
+	Currently only using PWM so the only important fields are
+		duty cycle (gpio.Duty)
+		frequency (phsyic.Frequency)
+*/
 type pinState struct {
 	DutyCycle gpio.Duty
 	Frequency physic.Frequency
 }
+
+/*
+Our server with a map to represent our pins
+*/
 type terragpioserver struct {
 	pb.UnimplementedSetgpioServer
 	Pins map[string]pinState
 }
 
+// Set frequency and duty cycle on a pin
 func (s *terragpioserver) SetPWM(ctx context.Context, settings *pb.PWMRequest) (*pb.PWMResponse, error) {
 
 	fmt.Printf("settings: %+v \n\n", settings)
@@ -72,10 +89,18 @@ func (s *terragpioserver) SetPWM(ctx context.Context, settings *pb.PWMRequest) (
 	return &resp, nil
 }
 
+<<<<<<< HEAD
 func (s *terragpioserver) SetBME280(ctx context.Context, settings *pb.BME280Request) (*pb.BME280Response, error) {
 	fmt.Printf("settings: %+v \n\n", settings)
 
 	bus, err := i2creg.Open(settings.I2Cbus) // ToDo: This uses first found I2C bus; add option to specify bus
+=======
+// Return temperature, pressure and humidity readings from a BME280 sensor connected via i2c
+func (s *terragpioserver) SenseBME280(ctx context.Context, settings *pb.BME280Request) (*pb.BME280Response, error) {
+	fmt.Printf("settings: %+v \n\n", settings)
+
+	bus, err := i2creg.Open(settings.I2Cbus)
+>>>>>>> bme280
 	if err != nil {
 		log.Fatal(err)
 		return nil, err
@@ -100,6 +125,63 @@ func (s *terragpioserver) SetBME280(ctx context.Context, settings *pb.BME280Requ
 	return &resp, nil
 }
 
+<<<<<<< HEAD
+=======
+// Set duty cycle on a pin based on the temperature reading from a BME280
+func (s *terragpioserver) PWMDutyCycleOutput_BME280TempInput(ctx context.Context, settings *pb.FanControllerRequest) (*pb.FanControllerResponse, error) {
+	//setup the PWM device
+	s.SetPWM(ctx, settings.FanDevice)
+
+	/* Calculate slope so we that when given max and min duty cycle settings and temperature readings.
+	*  We use this to calculate duty cycle (d) based on temperature readings (r.Temperature).
+	 */
+	slope := (settings.DutyCycleMax - settings.DutyCycleMin) / (settings.TemperatureMax - settings.TemperatureMin)
+
+	//Setup the temperature and frequency vars so we can use them later
+	var t physic.Temperature
+	var f physic.Frequency
+
+	/* We want to start a loop here that gets the temp and sets the duty cycle
+	*  However, we don't want to be in a blocking loop so the loop can be brought into a go routine
+	 */
+
+	//Convert the uint64 value in setttings.TimeInterval to time.Duration so we can convert to time.Second and use it as the input for our ticker
+	dutyCycleTicker := time.NewTicker(time.Second * time.Duration(settings.TimeInterval))
+
+	//start the ticker
+	go func() {
+		for range dutyCycleTicker.C {
+			//read the values from the BME280
+			r, err := s.SenseBME280(ctx, settings.BME280Device)
+			if err != nil {
+				panic(err)
+			}
+
+			/* Temperature value will be returned as a string like "10 C"
+			*  convert it to a physic.Temperature so we can convert it to a uint64 and do some math
+			 */
+			t.Set(r.Temperature)
+			d, err := gpio.ParseDuty(strconv.FormatUint(settings.DutyCycleMax-(slope*(uint64(t.Celsius()))), 10) + "%")
+			if err != nil {
+				fmt.Println("error parsing duty cycle: ", err)
+				panic(err)
+			}
+			//d := settings.DutyCycleMax - (slope * (uint64(t.Celsius())))
+
+			//set the dutycycle
+			f.Set(settings.FanDevice.Frequency)
+			setPWMDutyCycle(d,
+				f,
+				gpioreg.ByName(settings.FanDevice.Pin))
+
+		}
+	}()
+
+	resp := pb.FanControllerResponse{}
+	return &resp, nil
+}
+
+>>>>>>> bme280
 func newServer() *terragpioserver {
 	s := &terragpioserver{}
 	s.Pins = make(map[string]pinState)
@@ -110,7 +192,6 @@ func (s *terragpioserver) genPWMResponse() (response pb.PWMResponse) {
 
 	var err string
 	err = "notYet"
-	//what's special about "nil"?
 
 	if err != "notYet" {
 		response.Verified = false
@@ -119,15 +200,40 @@ func (s *terragpioserver) genPWMResponse() (response pb.PWMResponse) {
 
 	response.Verified = true
 	return response
+}
 
+func setPWMDutyCycle(d gpio.Duty, f physic.Frequency, p gpio.PinIO) error {
+
+	if err := p.PWM(d, f); err != nil {
+		fmt.Println(err)
+		return err
+	}
+	fmt.Println("pin for pwm: ", p)
+	fmt.Println("duty cycle: ", d)
+	fmt.Println("frequency: ", f)
+	println()
+	return nil
 }
 
 func main() {
 	flag.Parse()
 	host.Init()
+<<<<<<< HEAD
 	/*fmt.Printf("Pi? %v \n\n", rpi.Present())
 	fmt.Printf("Available Pins: %+v \n\n", gpioreg.All())
 	fmt.Printf("I2C Busses: %+v \n\n", i2creg.All())*/
+=======
+
+	fmt.Printf("Pi? %v \n\n", rpi.Present())
+	fmt.Printf("Available Pins: %+v \n\n", gpioreg.All())
+	fmt.Printf("I2C Busses: %+v \n\n", i2creg.All())
+
+	/*d, de := gpio.ParseDuty("90%")
+	if de != nil {
+		fmt.Println("duty cycle parsing error: ", de)
+	}
+	setPWMDutyCycle(d, physic.Frequency(25000), gpioreg.ByName(("GPIO13")))*/
+>>>>>>> bme280
 
 	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", *port))
 	if err != nil {
@@ -136,6 +242,7 @@ func main() {
 	var opts []grpc.ServerOption
 	grpcServer := grpc.NewServer(opts...)
 	pb.RegisterSetgpioServer(grpcServer, newServer())
-	grpcServer.Serve(lis)
 
+	// Listen for client connections
+	grpcServer.Serve(lis)
 }

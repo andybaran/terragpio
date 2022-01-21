@@ -7,12 +7,16 @@ package terragpio;
 service setgpio {
     rpc SetPWM(PWMRequest) returns(PWMResponse) {}
     rpc SetBME280(BME280Request) returns(BME280Response) {}
+<<<<<<< HEAD
+=======
+    rpc PWMDutyCycleOutput_BME280TempInput(FanControllerRequest) returns(FanControllerResponse) {}
+>>>>>>> bme280
 }
 
 message PWMRequest {
     string pin = 1; // expect the pin to be expressed in terms of GPIO standard (i.e. GPIO6) 
     string dutycycle = 2; // format is "nn%" where nn is 00 - 100
-    string frequency = 3; // format is "nM" where is Mega Hertz 
+    string frequency = 3; // format is "nM" where n is Mega Hertz 
 }
 
 message PWMResponse {
@@ -28,4 +32,23 @@ message BME280Response {
     string temperature = 1;
     string humidity = 2;
     string pressure = 3;
+<<<<<<< HEAD
+=======
+}
+
+
+message FanControllerRequest {
+    uint64 timeInterval = 1;
+    optional BME280Request BME280Device = 2;
+    uint64 temperatureMax = 3;
+    uint64 temperatureMin = 4;
+    optional PWMRequest fanDevice = 5; 
+    string dutyCycleMax = 6;
+    string dutyCycleMin = 7;    
+}
+
+message FanControllerResponse {
+  //ToDo: Read more about GRPC status
+  // https://cloud.google.com/apis/design/errors#error_model  
+>>>>>>> bme280
 }

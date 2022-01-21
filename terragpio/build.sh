@@ -1,10 +1,7 @@
-#! /bin/sh
-
-# cd cmd/client
-# GOOS=linux GOARCH=arm go build -v ./...
-# cd ../server
-echo "************************************************"
+clear
+echo "*********** Reticulating Splines ***********"
 echo "Building"
+<<<<<<< HEAD
 echo "************************************************"
 echo ""
 GOOS=linux GOARCH=arm go build -v -a ./...
@@ -16,14 +13,11 @@ echo "Done building"
 echo "************************************************"
 echo ""
 echo "************************************************"
+=======
+GOOS=linux GOARCH=arm go build -o ./server ./cmd/server/rpiserver.go 
+GOOS=linux GOARCH=arm go build -o ./client ./cmd/client/rpiclient.go    
+>>>>>>> bme280
 echo "Copying"
-echo "************************************************"
-echo ""
-cd ../..
-scp ./cmd/server/server pi@10.15.21.124:/home/pi/bins
-scp ./cmd/client/client pi@10.15.21.124:/home/pi/bins
-echo ""
-echo "************************************************"
-echo "All done"
-echo "************************************************"
-echo ""
+scp ./server pi@10.15.21.124:/home/pi/bins
+scp ./client pi@10.15.21.124:/home/pi/bins
+echo "***********     All Done        ***********"
