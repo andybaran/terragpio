@@ -27,7 +27,7 @@ func setPWM(client pb.SetgpioClient, settings *pb.PWMRequest) {
 	defer cancel()
 	actualsettings, err := client.SetPWM(ctx, settings)
 	if err != nil {
-		log.Fatalf("Error : ", client, err)
+		log.Fatalf("Error from setPWM: %w", err)
 	}
 	fmt.Println(actualsettings)
 }
@@ -38,18 +38,18 @@ func SetBME280(client pb.SetgpioClient, settings *pb.BME280Request) {
 	defer cancel()
 	actualsettings, err := client.SetBME280(ctx, settings)
 	if err != nil {
-		log.Fatalf("Error : ", client, err)
+		log.Fatalf("Error from SetBME280: %w", err)
 	}
 	fmt.Println(actualsettings)
 }
 
-func FanController(client pb.SetgpioClient, settings *pb.FanControllerRequest) {
+func StartFanController(client pb.SetgpioClient, settings *pb.FanControllerRequest) {
 	fmt.Printf("Setting up a fan controller --> %+v \n", settings)
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	actualsettings, err := client.PWMDutyCycleOutput_BME280TempInput(ctx, settings)
 	if err != nil {
-		log.Fatalf("Error : ", client, err)
+		log.Fatalf("Error from StartFanController: %w", err)
 	}
 	fmt.Println(actualsettings)
 }
@@ -58,7 +58,7 @@ func main() {
 
 	// Flags to setup a PWM device on a GPIO pin, likely a fan
 	pinPtr := flag.String("pin", "GPIO13", "GPIO Pin")
-	dutyCyclePtr := flag.String("dutycycle", "30%", "Duty cycle")
+	dutyCyclePtr := flag.String("dutycycle", "50%", "Duty cycle")
 	freqPtr := flag.String("frequency", "25000", "Frequency")
 
 	// Flags to setup I2C bus and deviee, like BME280 on bus 1
@@ -66,11 +66,11 @@ func main() {
 	I2Caddr := flag.Uint64("I2Caddr", 0x77, "I2C Address") //BME280 may also be 0x76
 
 	// Flags to tie BME280 sensor and fan together
-	timeInterval := flag.Uint64("timeInterval", 1, "Time in seconds")
-	temperatureMax := flag.Uint64("temperatureMax", 15, "Max temp")
-	temperatureMin := flag.Uint64("temperatureMin", 27, "Min temp")
-	dutyCycleMax := flag.Uint64("dutyCycleMax", 90, "Max duty cycle")
-	dutyCycleMin := flag.Uint64("dutyCycleMin", 30, "Min duty cycle")
+	timeInterval := flag.Uint64("timeInterval", 5, "Time in seconds")
+	temperatureMax := flag.Uint64("temperatureMax", 100, "Max temp")
+	temperatureMin := flag.Uint64("temperatureMin", 0, "Min temp")
+	dutyCycleMax := flag.Uint64("dutyCycleMax", 100, "Max duty cycle")
+	dutyCycleMin := flag.Uint64("dutyCycleMin", 10, "Min duty cycle")
 
 	flag.Parse()
 
@@ -93,7 +93,7 @@ func main() {
 	opts = append(opts, grpc.WithBlock())
 	conn, err := grpc.Dial(*serverAddr, opts...)
 	if err != nil {
-		log.Fatalf("fail to dial: %v", err)
+		log.Fatalf("fail to dial: %w", err)
 	}
 	defer conn.Close()
 	client := pb.NewSetgpioClient(conn)
@@ -110,7 +110,7 @@ func main() {
 		I2Caddr: *I2Caddr, // "0x76"
 	})*/
 
-	FanController(client, &pb.FanControllerRequest{
+	StartFanController(client, &pb.FanControllerRequest{
 		TimeInterval: *timeInterval,
 		BME280Device: &pb.BME280Request{
 			I2Cbus:  *I2Cbus,

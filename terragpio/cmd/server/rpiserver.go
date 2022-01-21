@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"strconv"
 	"time"
 
 	pb "github.com/andybaran/fictional-goggles/terragpio"
@@ -140,27 +141,33 @@ func (s *terragpioserver) PWMDutyCycleOutput_BME280TempInput(ctx context.Context
 	dutyCycleTicker := time.NewTicker(time.Second * time.Duration(settings.TimeInterval))
 
 	//start the ticker
-	for range dutyCycleTicker.C {
-		//read the values from the BME280
-		r, err := s.SenseBME280(ctx, settings.BME280Device)
-		if err != nil {
-			panic(err)
+	go func() {
+		for range dutyCycleTicker.C {
+			//read the values from the BME280
+			r, err := s.SenseBME280(ctx, settings.BME280Device)
+			if err != nil {
+				panic(err)
+			}
+
+			/* Temperature value will be returned as a string like "10 C"
+			*  convert it to a physic.Temperature so we can convert it to a uint64 and do some math
+			 */
+			t.Set(r.Temperature)
+			d, err := gpio.ParseDuty(strconv.FormatUint(settings.DutyCycleMax-(slope*(uint64(t.Celsius()))), 10) + "%")
+			if err != nil {
+				fmt.Println("error parsing duty cycle: ", err)
+				panic(err)
+			}
+			//d := settings.DutyCycleMax - (slope * (uint64(t.Celsius())))
+
+			//set the dutycycle
+			f.Set(settings.FanDevice.Frequency)
+			setPWMDutyCycle(d,
+				f,
+				gpioreg.ByName(settings.FanDevice.Pin))
+
 		}
-
-		/* Temperature value will be returned as a string like "10 C"
-		*  convert it to a physic.Temperature so we can convert it to a uint64 and do some math
-		 */
-		t.Set(r.Temperature)
-		d := (slope*(uint64(t.Celsius())-settings.TemperatureMax) + settings.DutyCycleMax)
-		//d := settings.DutyCycleMax - (slope * (uint64(t.Celsius())))
-
-		//set the dutycycle
-		f.Set(settings.FanDevice.Frequency)
-		setPWMDutyCycle(gpio.Duty(d),
-			f,
-			gpioreg.ByName(settings.FanDevice.Pin))
-
-	}
+	}()
 
 	resp := pb.FanControllerResponse{}
 	return &resp, nil
@@ -189,11 +196,12 @@ func (s *terragpioserver) genPWMResponse() (response pb.PWMResponse) {
 func setPWMDutyCycle(d gpio.Duty, f physic.Frequency, p gpio.PinIO) error {
 
 	if err := p.PWM(d, f); err != nil {
-		println(err)
+		fmt.Println(err)
 		return err
 	}
-	println("duty cycle: ", d)
-	println("frequency: ", f)
+	fmt.Println("pin for pwm: ", p)
+	fmt.Println("duty cycle: ", d)
+	fmt.Println("frequency: ", f)
 	println()
 	return nil
 }
@@ -206,7 +214,11 @@ func main() {
 	fmt.Printf("Available Pins: %+v \n\n", gpioreg.All())
 	fmt.Printf("I2C Busses: %+v \n\n", i2creg.All())
 
-	setPWMDutyCycle(gpio.Duty(100), physic.Frequency(25000), gpioreg.ByName(("GPIO13")))
+	/*d, de := gpio.ParseDuty("90%")
+	if de != nil {
+		fmt.Println("duty cycle parsing error: ", de)
+	}
+	setPWMDutyCycle(d, physic.Frequency(25000), gpioreg.ByName(("GPIO13")))*/
 
 	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", *port))
 	if err != nil {

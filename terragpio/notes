@@ -32,5 +32,8 @@ b = measured duty
 y = mx+b
 
 y - (mx) = b
-y -b / x = 
+y - b / x = 
+
+
+presumably working pwm: https://github.com/andybaran/fictional-goggles/blob/21-april/terragpio/cmd/server/rpiserver.go
 
