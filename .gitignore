@@ -26,3 +26,5 @@ rpiserver
 *.MIB
 terragpio/client
 terragpio/server
+client
+server
