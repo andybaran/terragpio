@@ -89,18 +89,11 @@ func (s *terragpioserver) SetPWM(ctx context.Context, settings *pb.PWMRequest) (
 	return &resp, nil
 }
 
-<<<<<<< HEAD
-func (s *terragpioserver) SetBME280(ctx context.Context, settings *pb.BME280Request) (*pb.BME280Response, error) {
-	fmt.Printf("settings: %+v \n\n", settings)
-
-	bus, err := i2creg.Open(settings.I2Cbus) // ToDo: This uses first found I2C bus; add option to specify bus
-=======
 // Return temperature, pressure and humidity readings from a BME280 sensor connected via i2c
 func (s *terragpioserver) SenseBME280(ctx context.Context, settings *pb.BME280Request) (*pb.BME280Response, error) {
 	fmt.Printf("settings: %+v \n\n", settings)
 
 	bus, err := i2creg.Open(settings.I2Cbus)
->>>>>>> bme280
 	if err != nil {
 		log.Fatal(err)
 		return nil, err
@@ -125,8 +118,6 @@ func (s *terragpioserver) SenseBME280(ctx context.Context, settings *pb.BME280Re
 	return &resp, nil
 }
 
-<<<<<<< HEAD
-=======
 // Set duty cycle on a pin based on the temperature reading from a BME280
 func (s *terragpioserver) PWMDutyCycleOutput_BME280TempInput(ctx context.Context, settings *pb.FanControllerRequest) (*pb.FanControllerResponse, error) {
 	//setup the PWM device
@@ -181,7 +172,6 @@ func (s *terragpioserver) PWMDutyCycleOutput_BME280TempInput(ctx context.Context
 	return &resp, nil
 }
 
->>>>>>> bme280
 func newServer() *terragpioserver {
 	s := &terragpioserver{}
 	s.Pins = make(map[string]pinState)
@@ -218,11 +208,6 @@ func setPWMDutyCycle(d gpio.Duty, f physic.Frequency, p gpio.PinIO) error {
 func main() {
 	flag.Parse()
 	host.Init()
-<<<<<<< HEAD
-	/*fmt.Printf("Pi? %v \n\n", rpi.Present())
-	fmt.Printf("Available Pins: %+v \n\n", gpioreg.All())
-	fmt.Printf("I2C Busses: %+v \n\n", i2creg.All())*/
-=======
 
 	fmt.Printf("Pi? %v \n\n", rpi.Present())
 	fmt.Printf("Available Pins: %+v \n\n", gpioreg.All())
@@ -233,7 +218,6 @@ func main() {
 		fmt.Println("duty cycle parsing error: ", de)
 	}
 	setPWMDutyCycle(d, physic.Frequency(25000), gpioreg.ByName(("GPIO13")))*/
->>>>>>> bme280
 
 	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", *port))
 	if err != nil {

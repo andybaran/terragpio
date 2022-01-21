@@ -7,10 +7,7 @@ package terragpio;
 service setgpio {
     rpc SetPWM(PWMRequest) returns(PWMResponse) {}
     rpc SetBME280(BME280Request) returns(BME280Response) {}
-<<<<<<< HEAD
-=======
     rpc PWMDutyCycleOutput_BME280TempInput(FanControllerRequest) returns(FanControllerResponse) {}
->>>>>>> bme280
 }
 
 message PWMRequest {
@@ -32,8 +29,6 @@ message BME280Response {
     string temperature = 1;
     string humidity = 2;
     string pressure = 3;
-<<<<<<< HEAD
-=======
 }
 
 
@@ -50,5 +45,4 @@ message FanControllerRequest {
 message FanControllerResponse {
   //ToDo: Read more about GRPC status
   // https://cloud.google.com/apis/design/errors#error_model  
->>>>>>> bme280
 }

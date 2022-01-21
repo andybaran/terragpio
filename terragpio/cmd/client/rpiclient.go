@@ -122,10 +122,6 @@ func main() {
 	SetBME280(client, &pb.BME280Request{
 		I2Cbus:  *I2Cbus,
 		I2Caddr: *I2Caddr, // "0x76"
-<<<<<<< HEAD
-	})
-
-=======
 	})*/
 
 	StartFanController(client, &pb.FanControllerRequest{
@@ -144,5 +140,4 @@ func main() {
 		DutyCycleMax: *dutyCycleMax,
 		DutyCycleMin: *dutyCycleMin,
 	})
->>>>>>> bme280
 }

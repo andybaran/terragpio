@@ -13,12 +13,8 @@ Warn: 1.3.6.1.4.1.1991.1.1.1.1.19
 Shutdown: 1.3.6.1.4.1.1991.1.1.1.1.20
 
 
-<<<<<<< HEAD
-
-=======
 Protobuf notes
 https://developers.google.com/protocol-buffers/docs/overview
->>>>>>> bme280
 
 
 1) take in max and min temp
@@ -28,8 +24,6 @@ https://developers.google.com/protocol-buffers/docs/overview
 5) if below min fan speed percent set fan speed percent to min
     - otherwise set to percent calculated in 4
 
-<<<<<<< HEAD
-=======
 m = slope
 x = measured temp
 y = dutyCycleMax
@@ -42,5 +36,4 @@ y - b / x =
 
 
 presumably working pwm: https://github.com/andybaran/fictional-goggles/blob/21-april/terragpio/cmd/server/rpiserver.go
->>>>>>> bme280
 
