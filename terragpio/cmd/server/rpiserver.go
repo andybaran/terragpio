@@ -11,6 +11,8 @@ import (
 
 	pb "github.com/andybaran/fictional-goggles/terragpio"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"periph.io/x/conn/v3/gpio"
 	"periph.io/x/conn/v3/gpio/gpioreg"
@@ -55,9 +57,10 @@ type terragpioserver struct {
 // Set frequency and duty cycle on a pin
 func (s *terragpioserver) SetPWM(ctx context.Context, settings *pb.PWMRequest) (*pb.PWMResponse, error) {
 
-	fmt.Printf("settings: %+v \n\n", settings)
+	//fmt.Printf("settings: %+v \n\n", settings)
+	// ToDo: How in the heck do I handle an error here? Just try to catch invalid input?
 	pin := gpioreg.ByName(settings.Pin)
-	fmt.Printf("pin: %+v \n\n", pin)
+	//fmt.Printf("pin: %+v \n\n", pin)
 
 	d, err := gpio.ParseDuty(settings.Dutycycle)
 	if err != nil {
@@ -67,13 +70,14 @@ func (s *terragpioserver) SetPWM(ctx context.Context, settings *pb.PWMRequest) (
 
 	var f physic.Frequency
 	if err := f.Set(settings.Frequency); err != nil {
-		println(err)
-		return nil, err
+		// println(err)
+		return nil, status.Errorf(codes.Unknown, fmt.Sprintf("Unable to compute the frequency, %s", err))
+		// Unknown seemed like the most logical since this isn't really a typical API response that we're expecting from the GPIO library
 	}
 
 	if err := pin.PWM(d, f); err != nil {
-		println(err)
-		return nil, err
+		// println(err)
+		return nil, status.Errorf(codes.Unknown, fmt.Sprintf("Failed setting duty cycle and/or frequency, %s", err))
 	}
 
 	thisPinState := pinState{
@@ -92,19 +96,19 @@ func (s *terragpioserver) SetPWM(ctx context.Context, settings *pb.PWMRequest) (
 
 // Return temperature, pressure and humidity readings from a BME280 sensor connected via i2c
 func (s *terragpioserver) SenseBME280(ctx context.Context, settings *pb.BME280Request) (*pb.BME280Response, error) {
-	fmt.Printf("settings: %+v \n\n", settings)
+	//fmt.Printf("settings: %+v \n\n", settings)
 
 	bus, err := i2creg.Open(settings.I2Cbus)
 	if err != nil {
 		log.Fatal(err)
-		return nil, err
+		return nil, status.Errorf(codes.Unknown, fmt.Sprintf("Unable to open the i2c bus, %s", err))
 	}
 	defer bus.Close()
 
 	dev, err := bmxx80.NewI2C(bus, uint16(settings.I2Caddr), &bmxx80.DefaultOpts)
 	if err != nil {
 		log.Fatal(err)
-		return nil, err
+		return nil, status.Errorf(codes.Unknown, fmt.Sprintf("Unable to intitialize your bmxx80 i2c device, %s", err))
 	}
 	defer dev.Halt()
 
@@ -155,7 +159,7 @@ func (s *terragpioserver) PWMDutyCycleOutput_BME280TempInput(ctx context.Context
 			t.Set(r.Temperature)
 			d, err := gpio.ParseDuty(strconv.FormatUint(settings.DutyCycleMax-(slope*(uint64(t.Celsius()))), 10) + "%")
 			if err != nil {
-				fmt.Println("error parsing duty cycle: ", err)
+				//fmt.Println("error parsing duty cycle: ", err)
 				panic(err)
 			}
 			//d := settings.DutyCycleMax - (slope * (uint64(t.Celsius())))
