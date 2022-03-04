@@ -26,16 +26,6 @@ type SetBME280Args struct {
 	I2CAddr uint64
 }
 
-type StartFanControllerArgs struct {
-	timeInterval   uint64
-	BME280Device   pb.BME280Request
-	temperatureMax uint64
-	temperatureMin uint64
-	fanDevice      pb.PWMRequest
-	dutyCycleMax   string
-	dutyCylceMin   string
-}
-
 func (c *Client) SetPWM(args SetPWMArgs) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -61,25 +51,6 @@ func (c *Client) SetBME280(args SetBME280Args) error {
 		return err
 	}
 	fmt.Println(actualsettings)
-	return nil
-}
-
-func (c *Client) StartFanController(args StartFanControllerArgs) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	_, err := c.c.PWMDutyCycleOutput_BME280TempInput(ctx, &pb.FanControllerRequest{TimeInterval: args.timeInterval,
-		BME280Device:   &args.BME280Device,
-		TemperatureMax: args.temperatureMax,
-		TemperatureMin: args.temperatureMin,
-		FanDevice:      &args.fanDevice,
-		DutyCycleMax:   args.dutyCycleMax,
-		DutyCycleMin:   args.dutyCylceMin,
-	})
-	if err != nil {
-		log.Fatalf("Error : ", c, err)
-		return err
-	}
 	return nil
 }
 
