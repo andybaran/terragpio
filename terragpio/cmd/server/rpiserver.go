@@ -98,7 +98,7 @@ func (s *terragpioserver) SetPWM(ctx context.Context, settings *pb.PWMRequest) (
 }
 
 // Return temperature, pressure and humidity readings from a BME280 sensor connected via i2c
-func (s *terragpioserver) SenseBME280(ctx context.Context, settings *pb.BME280Request) (*pb.BME280Response, error) {
+func (s *terragpioserver) SenseBME280(ctx context.Context, settings *pb.BME280Request) (*pb.genericPinSetResponse, error) {
 	//fmt.Printf("settings: %+v \n\n", settings)
 	//ToDo: Revisit this to seperate setting the "pin" and reading from the bus
 
@@ -138,7 +138,7 @@ func (s *terragpioserver) SenseBME280(ctx context.Context, settings *pb.BME280Re
 }
 
 // Set duty cycle on a pin based on the temperature reading from a BME280
-func (s *terragpioserver) PWMDutyCycleOutput_BME280TempInput(ctx context.Context, settings *pb.FanControllerRequest) (*pb.FanControllerResponse, error) {
+func (s *terragpioserver) PWMDutyCycleOutput_BME280TempInput(ctx context.Context, settings *pb.FanControllerRequest) (*pb.FanController, error) {
 	//setup the PWM device
 	s.SetPWM(ctx, settings.FanDevice)
 
@@ -197,6 +197,7 @@ func newServer() *terragpioserver {
 	return s
 }
 
+/*
 func (s *terragpioserver) genPWMResponse() (response pb.PWMResponse) {
 
 	var err string
@@ -210,6 +211,7 @@ func (s *terragpioserver) genPWMResponse() (response pb.PWMResponse) {
 	response.Verified = true
 	return response
 }
+*/
 
 func setPWMDutyCycle(d gpio.Duty, f physic.Frequency, p gpio.PinIO) error {
 
