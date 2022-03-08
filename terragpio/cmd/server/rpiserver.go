@@ -44,6 +44,8 @@ var (
 type pinState struct {
 	DutyCycle gpio.Duty
 	Frequency physic.Frequency
+	I2Caddr uint64
+	I2cbus string 
 }
 
 /*
@@ -55,12 +57,11 @@ type terragpioserver struct {
 }
 
 // Set frequency and duty cycle on a pin
-func (s *terragpioserver) SetPWM(ctx context.Context, settings *pb.PWMRequest) (*pb.PWMResponse, error) {
+func (s *terragpioserver) SetPWM(ctx context.Context, settings *pb.PWMRequest) (*pb.genericPinSetResponse, error) {
 
 	//fmt.Printf("settings: %+v \n\n", settings)
 	// ToDo: How in the heck do I handle an error here? Just try to catch invalid input?
-	pin := gpioreg.ByName(settings.Pin)
-	//fmt.Printf("pin: %+v \n\n", pin)
+	pin := gpioreg.ByName(settings.Pin) 
 
 	d, err := gpio.ParseDuty(settings.Dutycycle)
 	if err != nil {
@@ -72,7 +73,7 @@ func (s *terragpioserver) SetPWM(ctx context.Context, settings *pb.PWMRequest) (
 	if err := f.Set(settings.Frequency); err != nil {
 		// println(err)
 		return nil, status.Errorf(codes.Unknown, fmt.Sprintf("Unable to compute the frequency, %s", err))
-		// Unknown seemed like the most logical since this isn't really a typical API response that we're expecting from the GPIO library
+		// Unknown seems like the most logical since this isn't really a typical API response that we're expecting from the GPIO library
 	}
 
 	if err := pin.PWM(d, f); err != nil {
@@ -83,6 +84,8 @@ func (s *terragpioserver) SetPWM(ctx context.Context, settings *pb.PWMRequest) (
 	thisPinState := pinState{
 		DutyCycle: d,
 		Frequency: f,
+		I2Caddr: 0,
+		I2Cbus: "NA",
 	}
 
 	s.Pins[settings.Pin] = thisPinState
@@ -90,13 +93,14 @@ func (s *terragpioserver) SetPWM(ctx context.Context, settings *pb.PWMRequest) (
 	fmt.Printf("Duty Cycle: %+v \n", d)
 	fmt.Printf("Frequency : %+v \n", f)
 
-	resp := pb.PWMResponse{Verified: true}
+	resp := pb.PWMResponse{pinNumber: settings.Pin}
 	return &resp, nil
 }
 
 // Return temperature, pressure and humidity readings from a BME280 sensor connected via i2c
 func (s *terragpioserver) SenseBME280(ctx context.Context, settings *pb.BME280Request) (*pb.BME280Response, error) {
 	//fmt.Printf("settings: %+v \n\n", settings)
+	//ToDo: Revisit this to seperate setting the "pin" and reading from the bus
 
 	bus, err := i2creg.Open(settings.I2Cbus)
 	if err != nil {
@@ -111,6 +115,15 @@ func (s *terragpioserver) SenseBME280(ctx context.Context, settings *pb.BME280Re
 		return nil, status.Errorf(codes.Unknown, fmt.Sprintf("Unable to intitialize your bmxx80 i2c device, %s", err))
 	}
 	defer dev.Halt()
+	
+	thisPinState := pinState{
+		DutyCycle: nil,
+		Frequency: nil,
+		I2Caddr: settings.I2Caddr,
+		I2Cbus: settings.I2Cbus,
+	}
+
+	s.Pins[settings.Pin] = thisPinState
 
 	// Read temperature from the sensor:
 	var env physic.Env
@@ -119,7 +132,8 @@ func (s *terragpioserver) SenseBME280(ctx context.Context, settings *pb.BME280Re
 	}
 	fmt.Printf("%8s %10s %9s\n", env.Temperature, env.Pressure, env.Humidity)
 
-	resp := pb.BME280Response{Temperature: env.Temperature.String(), Pressure: env.Pressure.String(), Humidity: env.Humidity.String()}
+	//resp := pb.BME280Response{Temperature: env.Temperature.String(), Pressure: env.Pressure.String(), Humidity: env.Humidity.String()}
+	resp := pb.genericPinSetResponse{pinNumber: string(thisPinState.I2Caddr)}
 	return &resp, nil
 }
 

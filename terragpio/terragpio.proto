@@ -10,6 +10,10 @@ service setgpio {
     rpc PWMDutyCycleOutput_BME280TempInput(FanControllerRequest) returns(FanControllerResponse) {}
 }
 
+message genericPinSetResponse {
+	string pinNumber = 1;
+}
+
 message PWMRequest {
     string pin = 1; // expect the pin to be expressed in terms of GPIO standard (i.e. GPIO6) 
     string dutycycle = 2; // format is "nn%" where nn is 00 - 100
