@@ -18,8 +18,8 @@ jobs:
       with:
         go-version: 1.17
 
-    - name: Build
-      run: go build -v ./...
+    - name: Build Server
+      run: GOOS=linux GOARCH=arm go build -o ./server ./cmd/server/rpiserver.go 
 
-    - name: Test
-      run: go test -v ./...
+    - name: Build Client
+      run: GOOS=linux GOARCH=arm go build -o ./client ./cmd/client/rpiclient.go
