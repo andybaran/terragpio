@@ -1,0 +1,25 @@
+name: Go
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.17
+
+    - name: Build Server
+      run: GOOS=linux GOARCH=arm go build -o ./server ./terragpio/cmd/server/rpiserver.go 
+
+    - name: Build Client
+      run: GOOS=linux GOARCH=arm go build -o ./client ./terragpio/cmd/client/rpiclient.go
