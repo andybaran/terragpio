@@ -37,23 +37,21 @@ var (
 
 /*
 	Struct to represet a GPIO pin.
-	Currently only using PWM so the only important fields are
-		duty cycle (gpio.Duty)
-		frequency (phsyic.Frequency)
 */
 type pinState struct {
-	DutyCycle gpio.Duty
-	Frequency physic.Frequency
-	I2Caddr uint64
-	I2cbus string 
+	DutyCycle *gpio.Duty
+	Frequency *physic.Frequency
+	I2Caddr *uint64
+	I2Cbus *string
+	I2CDeviceOnBus *bmxx80	
 }
 
 /*
-Our server with a map to represent our pins
+Our server with A map to represent our pins
 */
 type terragpioserver struct {
 	pb.UnimplementedSetgpioServer
-	Pins map[string]pinState
+	Pins map[string]pinState //Our key is a string because it is the GPIO pin identified by name, ie: 'GPIO13'
 }
 
 // Set frequency and duty cycle on a pin
@@ -84,8 +82,6 @@ func (s *terragpioserver) SetPWM(ctx context.Context, settings *pb.PWMRequest) (
 	thisPinState := pinState{
 		DutyCycle: d,
 		Frequency: f,
-		I2Caddr: 0,
-		I2Cbus: "NA",
 	}
 
 	s.Pins[settings.Pin] = thisPinState
@@ -97,11 +93,7 @@ func (s *terragpioserver) SetPWM(ctx context.Context, settings *pb.PWMRequest) (
 	return &resp, nil
 }
 
-// Return temperature, pressure and humidity readings from a BME280 sensor connected via i2c
-func (s *terragpioserver) SenseBME280(ctx context.Context, settings *pb.BME280Request) (*pb.genericPinSetResponse, error) {
-	//fmt.Printf("settings: %+v \n\n", settings)
-	//ToDo: Revisit this to seperate setting the "pin" and reading from the bus
-
+func (s *terragpioserver) SetBME280(ctx context.Context, settings *pb.BME280Request) (*pb.genericPinSetResponse, error) {
 	bus, err := i2creg.Open(settings.I2Cbus)
 	if err != nil {
 		log.Fatal(err)
@@ -117,23 +109,29 @@ func (s *terragpioserver) SenseBME280(ctx context.Context, settings *pb.BME280Re
 	defer dev.Halt()
 	
 	thisPinState := pinState{
-		DutyCycle: nil,
-		Frequency: nil,
 		I2Caddr: settings.I2Caddr,
 		I2Cbus: settings.I2Cbus,
+		I2CDeviceOnBus: dev,
 	}
 
 	s.Pins[settings.Pin] = thisPinState
+	resp := pb.genericPinSetResponse{pinNumber: string(thisPinState.I2Caddr)}
+	return &resp, nil
+}
 
+// Return temperature, pressure and humidity readings from a BME280 sensor connected via i2c
+func (s *terragpioserver) SenseBME280(ctx context.Context, settings *pb.genericPin) (*pb.BME280Response, error) {
+	
 	// Read temperature from the sensor:
 	var env physic.Env
+	dev = s.Pins[].I2CDeviceOnBus
 	if err = dev.Sense(&env); err != nil {
 		log.Fatal(err)
 	}
 	fmt.Printf("%8s %10s %9s\n", env.Temperature, env.Pressure, env.Humidity)
 
-	//resp := pb.BME280Response{Temperature: env.Temperature.String(), Pressure: env.Pressure.String(), Humidity: env.Humidity.String()}
-	resp := pb.genericPinSetResponse{pinNumber: string(thisPinState.I2Caddr)}
+	resp := pb.BME280Response{Temperature: env.Temperature.String(), Pressure: env.Pressure.String(), Humidity: env.Humidity.String()}
+	//resp := pb.genericPinSetResponse{pinNumber: string(thisPinState.I2Caddr)}
 	return &resp, nil
 }
 
@@ -162,7 +160,7 @@ func (s *terragpioserver) PWMDutyCycleOutput_BME280TempInput(ctx context.Context
 	go func() {
 		for range dutyCycleTicker.C {
 			//read the values from the BME280
-			r, err := s.SenseBME280(ctx, settings.BME280Device)
+			r, err := s.SenseBME280(ctx, settings.BME280DevicePin)
 			if err != nil {
 				panic(err)
 			}
