@@ -39,7 +39,6 @@ message genericPin {
 	string pin = 1; 
 }
 
-
 message FanControllerRequest {
     uint64 timeInterval = 1;
     string BME280DevicePin = 2;
