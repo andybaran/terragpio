@@ -19,7 +19,7 @@ jobs:
         go-version: 1.17
 
     - name: Go Get Modules
-      run: go get -uv ./...
+      run: go get -v ./...
     
     - name: Build Server
       run:  go build -o ./server ./terragpio/cmd/server/rpiserver.go 
