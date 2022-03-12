@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"strconv"
 	"time"
 
 	pb "github.com/andybaran/fictional-goggles/terragpio"
@@ -61,7 +62,7 @@ func main() {
 	dutyCyclePtr := flag.String("dutycycle", "50%", "Duty cycle")
 	freqPtr := flag.String("frequency", "25000", "Frequency")
 
-	// Flags to setup I2C bus and deviee, like BME280 on bus 1
+	// Flags to setup I2C bus and device. ie: a BME280 on bus 1
 	I2Cbus := flag.String("I2Cbus", "1", "I2C Bus")        //Very likely "1" on a raspberry pi
 	I2Caddr := flag.Uint64("I2Caddr", 0x77, "I2C Address") //BME280 may also be 0x76
 
@@ -99,31 +100,28 @@ func main() {
 	client := pb.NewSetgpioClient(conn)
 
 	// Set PWM
-	/*setPWM(client, &pb.PWMRequest{
+	setPWM(client, &pb.PWMRequest{
 		Pin:       *pinPtr,       //"GPIO13",
 		Dutycycle: *dutyCyclePtr, //"100%",
 		Frequency: *freqPtr,      //"25000",
 	})
 
+	// SetupBME280 device
 	SetBME280(client, &pb.BME280Request{
 		I2Cbus:  *I2Cbus,
 		I2Caddr: *I2Caddr, // "0x76"
-	})*/
-
-	StartFanController(client, &pb.FanControllerRequest{
-		TimeInterval: *timeInterval,
-		BME280Device: &pb.BME280Request{
-			I2Cbus:  *I2Cbus,
-			I2Caddr: *I2Caddr,
-		},
-		TemperatureMax: *temperatureMax,
-		TemperatureMin: *temperatureMin,
-		FanDevice: &pb.PWMRequest{
-			Pin:       *pinPtr,
-			Dutycycle: *dutyCyclePtr,
-			Frequency: *freqPtr,
-		},
-		DutyCycleMax: *dutyCycleMax,
-		DutyCycleMin: *dutyCycleMin,
 	})
+
+	i2cBusAddr := *I2Cbus
+	i2cBusAddr += strconv.FormatUint(*I2Caddr, 10)
+	StartFanController(client, &pb.FanControllerRequest{
+		TimeInterval:    *timeInterval,
+		BME280DevicePin: *pinPtr,
+		TemperatureMax:  *temperatureMax,
+		TemperatureMin:  *temperatureMin,
+		FanDevicePin:    i2cBusAddr,
+		DutyCycleMax:    *dutyCycleMax,
+		DutyCycleMin:    *dutyCycleMin,
+	})
+
 }
