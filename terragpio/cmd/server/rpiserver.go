@@ -39,11 +39,11 @@ var (
 	Struct to represet a GPIO pin.
 */
 type pinState struct {
-	DutyCycle *gpio.Duty
-	Frequency *physic.Frequency
-	I2Caddr *uint64
-	I2Cbus *string
-	I2CDeviceOnBus *bmxx80	
+	DutyCycle      *gpio.Duty
+	Frequency      *physic.Frequency
+	I2Caddr        *uint64
+	I2Cbus         *string
+	I2CDeviceOnBus *bmxx80.Dev
 }
 
 /*
@@ -55,11 +55,11 @@ type terragpioserver struct {
 }
 
 // Set frequency and duty cycle on a pin
-func (s *terragpioserver) SetPWM(ctx context.Context, settings *pb.PWMRequest) (*pb.genericPinSetResponse, error) {
+func (s *terragpioserver) SetPWM(ctx context.Context, settings *pb.PWMRequest) (*pb.PinSetResponse, error) {
 
 	//fmt.Printf("settings: %+v \n\n", settings)
 	// ToDo: How in the heck do I handle an error here? Just try to catch invalid input?
-	pin := gpioreg.ByName(settings.Pin) 
+	pin := gpioreg.ByName(settings.Pin)
 
 	d, err := gpio.ParseDuty(settings.Dutycycle)
 	if err != nil {
@@ -80,8 +80,8 @@ func (s *terragpioserver) SetPWM(ctx context.Context, settings *pb.PWMRequest) (
 	}
 
 	thisPinState := pinState{
-		DutyCycle: d,
-		Frequency: f,
+		DutyCycle: &d,
+		Frequency: &f,
 	}
 
 	s.Pins[settings.Pin] = thisPinState
@@ -89,11 +89,11 @@ func (s *terragpioserver) SetPWM(ctx context.Context, settings *pb.PWMRequest) (
 	fmt.Printf("Duty Cycle: %+v \n", d)
 	fmt.Printf("Frequency : %+v \n", f)
 
-	resp := pb.PWMResponse{pinNumber: settings.Pin}
+	resp := pb.PinSetResponse{PinNumber: settings.Pin}
 	return &resp, nil
 }
 
-func (s *terragpioserver) SetBME280(ctx context.Context, settings *pb.BME280Request) (*pb.genericPinSetResponse, error) {
+func (s *terragpioserver) SetBME280(ctx context.Context, settings *pb.BME280Request) (*pb.PinSetResponse, error) {
 	bus, err := i2creg.Open(settings.I2Cbus)
 	if err != nil {
 		log.Fatal(err)
@@ -107,25 +107,28 @@ func (s *terragpioserver) SetBME280(ctx context.Context, settings *pb.BME280Requ
 		return nil, status.Errorf(codes.Unknown, fmt.Sprintf("Unable to intitialize your bmxx80 i2c device, %s", err))
 	}
 	defer dev.Halt()
-	
+
 	thisPinState := pinState{
-		I2Caddr: settings.I2Caddr,
-		I2Cbus: settings.I2Cbus,
+		I2Caddr:        &settings.I2Caddr,
+		I2Cbus:         &settings.I2Cbus,
 		I2CDeviceOnBus: dev,
 	}
 
-	s.Pins[settings.Pin] = thisPinState
-	resp := pb.genericPinSetResponse{pinNumber: string(thisPinState.I2Caddr)}
+	//for an i2c device we track it using it's bus and address on that bus instead of the specific pin
+	i2cBusAddr := settings.I2Cbus
+	i2cBusAddr += strconv.FormatUint(settings.I2Caddr, 10)
+	s.Pins[i2cBusAddr] = thisPinState
+	resp := pb.PinSetResponse{PinNumber: i2cBusAddr}
 	return &resp, nil
 }
 
 // Return temperature, pressure and humidity readings from a BME280 sensor connected via i2c
-func (s *terragpioserver) SenseBME280(ctx context.Context, pin *pb.genericPin) (*pb.BME280Response, error) {
-	
+func (s *terragpioserver) SenseBME280(ctx context.Context, pin *pb.PinSetRequest) (*pb.BME280Response, error) {
+
 	// Read temperature from the sensor:
 	var env physic.Env
-	dev = s.Pins[pin.pin].I2CDeviceOnBus
-	if err = dev.Sense(&env); err != nil {
+	dev := s.Pins[pin.PinNumber].I2CDeviceOnBus
+	if err := dev.Sense(&env); err != nil {
 		log.Fatal(err)
 	}
 	fmt.Printf("%8s %10s %9s\n", env.Temperature, env.Pressure, env.Humidity)
@@ -135,7 +138,7 @@ func (s *terragpioserver) SenseBME280(ctx context.Context, pin *pb.genericPin) (
 }
 
 // Set duty cycle on a pin based on the temperature reading from a BME280
-func (s *terragpioserver) PWMDutyCycleOutput_BME280TempInput(ctx context.Context, settings *pb.FanControllerRequest) (*pb.FanController, error) {
+func (s *terragpioserver) PWMDutyCycleOutput_BME280TempInput(ctx context.Context, settings *pb.FanControllerRequest) (*pb.FanControllerResponse, error) {
 	//setup the PWM device
 	//s.SetPWM(ctx, settings.FanDevice)
 
@@ -159,7 +162,7 @@ func (s *terragpioserver) PWMDutyCycleOutput_BME280TempInput(ctx context.Context
 	go func() {
 		for range dutyCycleTicker.C {
 			//read the values from the BME280
-			r, err := s.SenseBME280(ctx, pb.genericPin{Pin = settings.BME280DevicePin})
+			r, err := s.SenseBME280(ctx, &pb.PinSetRequest{PinNumber: settings.BME280DevicePin})
 			if err != nil {
 				panic(err)
 			}
@@ -176,11 +179,11 @@ func (s *terragpioserver) PWMDutyCycleOutput_BME280TempInput(ctx context.Context
 			//d := settings.DutyCycleMax - (slope * (uint64(t.Celsius())))
 
 			//set the dutycycle
-			fan = s.Pins[settings.fanDevicePin]
-			f.Set(fan.Frequency)
+			fan := s.Pins[settings.FanDevicePin]
+			f.Set(fan.Frequency.String())
 			setPWMDutyCycle(d,
 				f,
-				gpioreg.ByName(settings.fanDevicePin))
+				gpioreg.ByName(settings.FanDevicePin))
 
 		}
 	}()
@@ -194,7 +197,6 @@ func newServer() *terragpioserver {
 	s.Pins = make(map[string]pinState)
 	return s
 }
-
 
 func setPWMDutyCycle(d gpio.Duty, f physic.Frequency, p gpio.PinIO) error {
 

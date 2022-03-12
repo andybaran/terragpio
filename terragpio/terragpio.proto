@@ -5,12 +5,13 @@ option go_package = "terragpio/terragpio";
 package terragpio;
 
 service setgpio {
-    rpc SetPWM(PWMRequest) returns(PWMResponse) {}
-    rpc SetBME280(BME280Request) returns(BME280Response) {}
+    rpc SetPWM(PWMRequest) returns(PinSetResponse) {}
+    rpc SetBME280(BME280Request) returns(PinSetResponse) {}
+    rpc SenseBME280(PinSetRequest) returns(BME280Response) {} //No need for a duplicate message (at this time) just to pass the pin value even though we are reading
     rpc PWMDutyCycleOutput_BME280TempInput(FanControllerRequest) returns(FanControllerResponse) {}
 }
 
-message genericPinSetResponse {
+message PinSetResponse {
 	string pinNumber = 1;
 }
 
@@ -35,8 +36,8 @@ message BME280Response {
     string pressure = 3;
 }
 
-message genericPin {
-	string pin = 1; 
+message PinSetRequest {
+	string pinNumber = 1; 
 }
 
 message FanControllerRequest {
@@ -45,8 +46,8 @@ message FanControllerRequest {
     uint64 temperatureMax = 3;
     uint64 temperatureMin = 4;
     string fanDevicePin = 5; 
-    string dutyCycleMax = 6;
-    string dutyCycleMin = 7;    
+    uint64 dutyCycleMax = 6;
+    uint64 dutyCycleMin = 7;    
 }
 
 message FanControllerResponse {

@@ -22,8 +22,9 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type SetgpioClient interface {
-	SetPWM(ctx context.Context, in *PWMRequest, opts ...grpc.CallOption) (*PWMResponse, error)
-	SetBME280(ctx context.Context, in *BME280Request, opts ...grpc.CallOption) (*BME280Response, error)
+	SetPWM(ctx context.Context, in *PWMRequest, opts ...grpc.CallOption) (*PinSetResponse, error)
+	SetBME280(ctx context.Context, in *BME280Request, opts ...grpc.CallOption) (*PinSetResponse, error)
+	SenseBME280(ctx context.Context, in *PinSetRequest, opts ...grpc.CallOption) (*BME280Response, error)
 	PWMDutyCycleOutput_BME280TempInput(ctx context.Context, in *FanControllerRequest, opts ...grpc.CallOption) (*FanControllerResponse, error)
 }
 
@@ -35,8 +36,8 @@ func NewSetgpioClient(cc grpc.ClientConnInterface) SetgpioClient {
 	return &setgpioClient{cc}
 }
 
-func (c *setgpioClient) SetPWM(ctx context.Context, in *PWMRequest, opts ...grpc.CallOption) (*PWMResponse, error) {
-	out := new(PWMResponse)
+func (c *setgpioClient) SetPWM(ctx context.Context, in *PWMRequest, opts ...grpc.CallOption) (*PinSetResponse, error) {
+	out := new(PinSetResponse)
 	err := c.cc.Invoke(ctx, "/terragpio.setgpio/SetPWM", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -44,9 +45,18 @@ func (c *setgpioClient) SetPWM(ctx context.Context, in *PWMRequest, opts ...grpc
 	return out, nil
 }
 
-func (c *setgpioClient) SetBME280(ctx context.Context, in *BME280Request, opts ...grpc.CallOption) (*BME280Response, error) {
-	out := new(BME280Response)
+func (c *setgpioClient) SetBME280(ctx context.Context, in *BME280Request, opts ...grpc.CallOption) (*PinSetResponse, error) {
+	out := new(PinSetResponse)
 	err := c.cc.Invoke(ctx, "/terragpio.setgpio/SetBME280", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *setgpioClient) SenseBME280(ctx context.Context, in *PinSetRequest, opts ...grpc.CallOption) (*BME280Response, error) {
+	out := new(BME280Response)
+	err := c.cc.Invoke(ctx, "/terragpio.setgpio/SenseBME280", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -66,8 +76,9 @@ func (c *setgpioClient) PWMDutyCycleOutput_BME280TempInput(ctx context.Context, 
 // All implementations must embed UnimplementedSetgpioServer
 // for forward compatibility
 type SetgpioServer interface {
-	SetPWM(context.Context, *PWMRequest) (*PWMResponse, error)
-	SetBME280(context.Context, *BME280Request) (*BME280Response, error)
+	SetPWM(context.Context, *PWMRequest) (*PinSetResponse, error)
+	SetBME280(context.Context, *BME280Request) (*PinSetResponse, error)
+	SenseBME280(context.Context, *PinSetRequest) (*BME280Response, error)
 	PWMDutyCycleOutput_BME280TempInput(context.Context, *FanControllerRequest) (*FanControllerResponse, error)
 	mustEmbedUnimplementedSetgpioServer()
 }
@@ -76,11 +87,14 @@ type SetgpioServer interface {
 type UnimplementedSetgpioServer struct {
 }
 
-func (UnimplementedSetgpioServer) SetPWM(context.Context, *PWMRequest) (*PWMResponse, error) {
+func (UnimplementedSetgpioServer) SetPWM(context.Context, *PWMRequest) (*PinSetResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetPWM not implemented")
 }
-func (UnimplementedSetgpioServer) SetBME280(context.Context, *BME280Request) (*BME280Response, error) {
+func (UnimplementedSetgpioServer) SetBME280(context.Context, *BME280Request) (*PinSetResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetBME280 not implemented")
+}
+func (UnimplementedSetgpioServer) SenseBME280(context.Context, *PinSetRequest) (*BME280Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SenseBME280 not implemented")
 }
 func (UnimplementedSetgpioServer) PWMDutyCycleOutput_BME280TempInput(context.Context, *FanControllerRequest) (*FanControllerResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PWMDutyCycleOutput_BME280TempInput not implemented")
@@ -134,6 +148,24 @@ func _Setgpio_SetBME280_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Setgpio_SenseBME280_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PinSetRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SetgpioServer).SenseBME280(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/terragpio.setgpio/SenseBME280",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SetgpioServer).SenseBME280(ctx, req.(*PinSetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Setgpio_PWMDutyCycleOutput_BME280TempInput_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(FanControllerRequest)
 	if err := dec(in); err != nil {
@@ -166,6 +198,10 @@ var Setgpio_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SetBME280",
 			Handler:    _Setgpio_SetBME280_Handler,
+		},
+		{
+			MethodName: "SenseBME280",
+			Handler:    _Setgpio_SenseBME280_Handler,
 		},
 		{
 			MethodName: "PWMDutyCycleOutput_BME280TempInput",
