@@ -49,7 +49,7 @@ func StartFanController(client pb.SetgpioClient, settings *pb.FanControllerReque
 	defer cancel()
 	actualsettings, err := client.PWMDutyCycleOutput_BME280TempInput(ctx, settings)
 	if err != nil {
-		log.Fatalf("Error from StartFanController: %w", err)
+		fmt.Printf("Error from StartFanController: %s", err)
 	}
 	fmt.Println(actualsettings)
 }
@@ -57,7 +57,7 @@ func StartFanController(client pb.SetgpioClient, settings *pb.FanControllerReque
 func main() {
 
 	// Flags to setup a PWM device on a GPIO pin, likely a fan
-	pinPtr := flag.String("pin", "GPIO13", "GPIO Pin")
+	pinPtr := flag.String("pin", "GPIO64", "GPIO Pin")
 	dutyCyclePtr := flag.String("dutycycle", "50%", "Duty cycle")
 	freqPtr := flag.String("frequency", "25000", "Frequency")
 
