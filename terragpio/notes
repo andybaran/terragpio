@@ -24,15 +24,9 @@ https://developers.google.com/protocol-buffers/docs/overview
 5) if below min fan speed percent set fan speed percent to min
     - otherwise set to percent calculated in 4
 
-m = slope
-x = measured temp
-y = dutyCycleMax
-b = measured duty 
-
-y = mx+b
-
-y - (mx) = b
-y - b / x = 
+slope = (dutyCycleMax - newduty) / (tempmax - newtemp)
+slope * (tempmax - newtemp) = (dutyCycleMax - newduty)
+(slope * (tempmax - newtemp)) - dutyCycleMax = - newduty
 
 
 presumably working pwm: https://github.com/andybaran/fictional-goggles/blob/21-april/terragpio/cmd/server/rpiserver.go

@@ -197,7 +197,9 @@ func (s *terragpioserver) PWMDutyCycleOutput_BME280TempInput(ctx context.Context
 			 */
 			println("setting duty cycle")
 			t.Set(r.Temperature)
-			d, err := gpio.ParseDuty(strconv.FormatUint(settings.DutyCycleMax-(slope*(uint64(t.Celsius()))), 10) + "%")
+			//d, err := gpio.ParseDuty(strconv.FormatUint(settings.DutyCycleMax-(slope*(uint64(t.Celsius()))), 10) + "%")
+			d, err := gpio.ParseDuty((slope*(settings.TemperatureMax-(uint64(t.Celsius()))))-settings.DutyCycleMax)
+			strconv.FormatUint(settings.DutyCycleMax-(slope*(uint64(t.Celsius()))), 10) + "%")
 			if err != nil {
 				fmt.Println("error parsing duty cycle: ", err)
 				panic(err)
