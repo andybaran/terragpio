@@ -59,7 +59,7 @@ func main() {
 
 	// Flags to setup a PWM device on a GPIO pin, likely a fan
 	pinPtr := flag.String("pin", "GPIO13", "GPIO Pin")
-	dutyCyclePtr := flag.String("dutycycle", "50%", "Duty cycle")
+	dutyCyclePtr := flag.String("dutycycle", "10%", "Duty cycle")
 	freqPtr := flag.String("frequency", "25000", "Frequency")
 
 	// Flags to setup I2C bus and device. ie: a BME280 on bus 1
