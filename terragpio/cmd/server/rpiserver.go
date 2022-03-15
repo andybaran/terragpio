@@ -185,7 +185,7 @@ func (s *terragpioserver) PWMDutyCycleOutput_BME280TempInput(ctx context.Context
 		for range dutyCycleTicker.C {
 			//read the values from the BME280
 			println("ticker started; trying to sense from bme280")
-			fmt.Sprintf("BME280DevicePin: %d", settings.BME280DevicePin)
+			fmt.Println("BME280DevicePin: ", settings.BME280DevicePin)
 			r, err := s.SenseBME280(ctx, &pb.PinSetRequest{PinNumber: settings.BME280DevicePin})
 			if err != nil {
 				println("error sensing bme280")
@@ -197,15 +197,19 @@ func (s *terragpioserver) PWMDutyCycleOutput_BME280TempInput(ctx context.Context
 			 */
 			println("setting duty cycle")
 			t.Set(r.Temperature)
-			fmt.Printf("temp:%s", t)
-			fmt.Printf("temp max:%s", strconv.FormatUint(settings.TemperatureMax, 10))
-			fmt.Printf("duty cycle max:%s", strconv.FormatUint(settings.DutyCycleMax, 10))
-			fmt.Printf("slope:%s", strconv.FormatUint(slope, 10))
-
+			fmt.Println("temp: ", t)
+			fmt.Println("t in celsius", uint64(t.Celsius()))
+			fmt.Println("temp max: ", strconv.FormatUint(settings.TemperatureMax, 10))
+			fmt.Println("duty cycle max: ", strconv.FormatUint(settings.DutyCycleMax, 10))
+			fmt.Println("slope: ", strconv.FormatUint(slope, 10))
+			fmt.Println("")
 			//d, err := gpio.ParseDuty(strconv.FormatUint(settings.DutyCycleMax-(slope*(uint64(t.Celsius()))), 10) + "%")
-			d, err := gpio.ParseDuty(strconv.FormatUint(((slope * (settings.TemperatureMax - (uint64(t.Celsius())))) - settings.DutyCycleMax), 10))
+			//d, err := gpio.ParseDuty(strconv.FormatUint(((slope * (settings.TemperatureMax - (uint64(t.Celsius())))) - settings.DutyCycleMax), 10))
+			stringd := /*gpio.ParseDuty*/ strconv.FormatFloat((float64(slope)*(float64(settings.TemperatureMax)-(t.Celsius())))-float64(settings.DutyCycleMax), 'b', 2, 64) + "%"
+			fmt.Println("d: ", stringd)
+			d, err := gpio.ParseDuty(stringd)
 			if err != nil {
-				fmt.Println("error parsing duty cycle: ", err)
+				fmt.Println("error parsing duty cycle? : ", err)
 				panic(err)
 			}
 			//d := settings.DutyCycleMax - (slope * (uint64(t.Celsius())))
@@ -216,7 +220,6 @@ func (s *terragpioserver) PWMDutyCycleOutput_BME280TempInput(ctx context.Context
 			setPWMDutyCycle(d,
 				f,
 				gpioreg.ByName(settings.FanDevicePin))
-
 		}
 	}()
 
