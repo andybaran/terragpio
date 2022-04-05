@@ -24,7 +24,7 @@ rpiclient
 rpiserver
 .DS_Store
 *.MIB
-terragpio/client
-terragpio/server
+./terragpio/client
+./terragpio/server
 client
 server
