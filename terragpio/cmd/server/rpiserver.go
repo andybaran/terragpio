@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"math"
 	"net"
 	"strconv"
 	"time"
@@ -203,10 +204,15 @@ func (s *terragpioserver) PWMDutyCycleOutput_BME280TempInput(ctx context.Context
 			fmt.Println("duty cycle max: ", strconv.FormatUint(settings.DutyCycleMax, 10))
 			fmt.Println("slope: ", strconv.FormatUint(slope, 10))
 			fmt.Println("")
-			//d, err := gpio.ParseDuty(strconv.FormatUint(settings.DutyCycleMax-(slope*(uint64(t.Celsius()))), 10) + "%")
-			//d, err := gpio.ParseDuty(strconv.FormatUint(((slope * (settings.TemperatureMax - (uint64(t.Celsius())))) - settings.DutyCycleMax), 10))
-			stringd := /*gpio.ParseDuty*/ strconv.FormatFloat((float64(slope)*(float64(settings.TemperatureMax)-(t.Celsius())))-float64(settings.DutyCycleMax), 'b', 2, 64) + "%"
-			fmt.Println("d: ", stringd)
+
+			floatd := 0 - (float64(slope)*(float64(settings.TemperatureMax)-(t.Celsius())) - float64(settings.DutyCycleMax))
+
+			fmt.Println("floatd: ", floatd)
+			intd := int(math.Round(floatd))
+			fmt.Println("inttd: ", intd)
+			stringd := strconv.Itoa(intd) + "%"
+			fmt.Println("stringd: ", stringd)
+
 			d, err := gpio.ParseDuty(stringd)
 			if err != nil {
 				fmt.Println("error parsing duty cycle? : ", err)
