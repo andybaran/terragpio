@@ -33,7 +33,7 @@ func setPWM(client pb.SetgpioClient, settings *pb.PWMRequest) (*pb.PinSetRespons
 	return resp, nil
 }
 
-func SetBME280(client pb.SetgpioClient, settings *pb.BME280Request) {
+func setBME280(client pb.SetgpioClient, settings *pb.BME280Request) {
 	fmt.Printf("Setting BME280 --> %+v \n", settings)
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -44,7 +44,7 @@ func SetBME280(client pb.SetgpioClient, settings *pb.BME280Request) {
 	fmt.Println(actualsettings)
 }
 
-func StartFanController(client pb.SetgpioClient, settings *pb.FanControllerRequest) {
+func startFanController(client pb.SetgpioClient, settings *pb.FanControllerRequest) {
 	fmt.Printf("Setting up a fan controller --> %+v \n", settings)
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -107,14 +107,14 @@ func main() {
 	})
 
 	// SetupBME280 device
-	SetBME280(client, &pb.BME280Request{
+	setBME280(client, &pb.BME280Request{
 		I2Cbus:  *I2Cbus,
 		I2Caddr: *I2Caddr, // "0x76"
 	})
 
 	i2cBusAddr := *I2Cbus
 	i2cBusAddr += strconv.FormatUint(*I2Caddr, 10)
-	StartFanController(client, &pb.FanControllerRequest{
+	startFanController(client, &pb.FanControllerRequest{
 		TimeInterval:    *timeInterval,
 		BME280DevicePin: i2cBusAddr,
 		TemperatureMax:  *temperatureMax,
