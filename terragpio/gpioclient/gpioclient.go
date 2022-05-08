@@ -36,18 +36,18 @@ type StartFanControllerArgs struct {
 	dutyCylceMin   string
 }
 
-func (c *Client) SetPWM(args SetPWMArgs) error {
+func (c *Client) SetPWM(args SetPWMArgs) (*pb.PinSetResponse, error) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	actualsettings, err := c.c.SetPWM(ctx, &pb.PWMRequest{Pin: args.Pin, Dutycycle: args.DutyCycle, Frequency: args.Freq})
+	resp, err := c.c.SetPWM(ctx, &pb.PWMRequest{Pin: args.Pin, Dutycycle: args.DutyCycle, Frequency: args.Freq})
 	if err != nil {
 		log.Fatalf("Error : ", c, err)
-		return err
+		return nil, err
 	}
-	fmt.Println(actualsettings)
-	return nil
+	fmt.Println(resp)
+	return resp, nil
 }
 
 func (c *Client) SetBME280(args SetBME280Args) error {
