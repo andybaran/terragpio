@@ -61,6 +61,11 @@ func newServer() *terragpioserver {
 	return s
 }
 
+/* TODO: This really only be allowed to be set to proper PWM pins and give a warning if pin(s) other than those available for PWM
+are passed. The gpio library may even just handle this for us? Regardless, for now we will assume a modern RPI is being used but develop a
+framework that could incorporate other boards if needed.
+*/
+
 // Set frequency and duty cycle on a pin
 func (s *terragpioserver) SetPWM(ctx context.Context, settings *pb.PWMRequest) (*pb.PinSetResponse, error) {
 
