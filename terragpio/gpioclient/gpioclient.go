@@ -50,32 +50,25 @@ func (c *Client) SetPWM(args SetPWMArgs) (*pb.PinSetResponse, error) {
 	return resp, nil
 }
 
-func (c *Client) SetBME280(args SetBME280Args) error {
+func (c *Client) SetBME280(args SetBME280Args) (*pb.PinSetResponse, error) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	actualsettings, err := c.c.SetBME280(ctx, &pb.BME280Request{I2Cbus: args.I2CBus, I2Caddr: args.I2CAddr})
+	resp, err := c.c.SetBME280(ctx, &pb.BME280Request{I2Cbus: args.I2CBus, I2Caddr: args.I2CAddr})
 	if err != nil {
 		log.Fatalf("Error : ", c, err)
-		return err
+		return nil, err
 	}
-	fmt.Println(actualsettings)
-	return nil
+	fmt.Println(resp)
+	return resp, nil
 }
 
-func (c *Client) StartFanController(args StartFanControllerArgs) error {
+func (c *Client) StartFanController(settings *pb.FanControllerRequest) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	_, err := c.c.PWMDutyCycleOutput_BME280TempInput(ctx, &pb.FanControllerRequest{TimeInterval: args.timeInterval,
-		BME280Device:   &args.BME280Device,
-		TemperatureMax: args.temperatureMax,
-		TemperatureMin: args.temperatureMin,
-		FanDevice:      &args.fanDevice,
-		DutyCycleMax:   args.dutyCycleMax,
-		DutyCycleMin:   args.dutyCylceMin,
-	})
+	_, err := c.c.PWMDutyCycleOutput_BME280TempInput(ctx, settings)
 	if err != nil {
 		log.Fatalf("Error : ", c, err)
 		return err
