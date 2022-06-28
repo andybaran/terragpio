@@ -27,13 +27,13 @@ type SetBME280Args struct {
 }
 
 type StartFanControllerArgs struct {
-	timeInterval   uint64
-	BME280Device   pb.BME280Request
-	temperatureMax uint64
-	temperatureMin uint64
-	fanDevice      pb.PWMRequest
-	dutyCycleMax   string
-	dutyCylceMin   string
+	timeInterval    uint64
+	BME280DevicePin string
+	temperatureMax  uint64
+	temperatureMin  uint64
+	fanDevice       string
+	dutyCycleMax    string
+	dutyCylceMin    string
 }
 
 func (c *Client) SetPWM(args SetPWMArgs) (*pb.PinSetResponse, error) {
