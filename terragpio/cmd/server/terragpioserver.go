@@ -142,14 +142,12 @@ func (s *terragpioserver) SenseBME280(ctx context.Context, pin *pb.PinSetRequest
 
 	// Read temperature from the sensor:
 	var env physic.Env
-	println("in the sensing function")
-	println(s.Pins[pin.PinNumber].I2CDeviceOnBus)
 	dev := s.Pins[pin.PinNumber].I2CDeviceOnBus
 	if err := dev.Sense(&env); err != nil {
 		println("error sensing")
 		log.Fatal(err)
 	}
-	fmt.Printf("Temperature: %8s \n", env.Temperature)
+	fmt.Printf("Sensor Temperature Reading: %8s \n", env.Temperature)
 
 	resp := pb.BME280Response{Temperature: env.Temperature.String(), Pressure: env.Pressure.String(), Humidity: env.Humidity.String()}
 	return &resp, nil
@@ -159,7 +157,6 @@ func (s *terragpioserver) SenseBME280(ctx context.Context, pin *pb.PinSetRequest
 func (s *terragpioserver) PWMDutyCycleOutput_BME280TempInput(ctx context.Context, settings *pb.FanControllerRequest) (*pb.FanControllerResponse, error) {
 	//setup the PWM device
 	//s.SetPWM(ctx, settings.FanDevice)
-	println("entered calculation")
 	/* Calculate slope so we that when given max and min duty cycle settings and temperature readings.
 	*  We use this to calculate duty cycle (d) based on temperature readings (r.Temperature).
 	 */
@@ -180,8 +177,6 @@ func (s *terragpioserver) PWMDutyCycleOutput_BME280TempInput(ctx context.Context
 	go func() {
 		for range dutyCycleTicker.C {
 			//read the values from the BME280
-			println("ticker started; trying to sense from bme280")
-			fmt.Println("BME280DevicePin: ", settings.BME280DevicePin)
 			r, err := s.SenseBME280(ctx, &pb.PinSetRequest{PinNumber: settings.BME280DevicePin})
 			if err != nil {
 				println("error sensing bme280")
@@ -191,7 +186,7 @@ func (s *terragpioserver) PWMDutyCycleOutput_BME280TempInput(ctx context.Context
 			/* Temperature value will be returned as a string like "10 C"
 			*  convert it to a physic.Temperature so we can convert it to a uint64 and do some math
 			 */
-			println("setting duty cycle")
+
 			t.Set(r.Temperature)
 
 			floatd := 0 - (float64(slope)*(float64(settings.TemperatureMax)-(t.Celsius())) - float64(settings.DutyCycleMax))
