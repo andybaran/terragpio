@@ -95,7 +95,7 @@ func (s *terragpioserver) SetPWM(ctx context.Context, settings *pb.PWMRequest) (
 
 	s.Pins[settings.Pin] = thisPinState
 
-	fmt.Printf("Fan Duty Cycle: %+v \n", d)
+	fmt.Printf("Initial Fan Duty Cycle: %+v \n", d)
 
 	resp := pb.PinSetResponse{PinNumber: settings.Pin}
 	return &resp, nil
@@ -107,6 +107,7 @@ func setPWMDutyCycle(d gpio.Duty, f physic.Frequency, p gpio.PinIO) error {
 		fmt.Println(err)
 		return err
 	}
+	fmt.Printf("Current Fan Duty Cycle: %+v \n", d)
 	return nil
 }
 
