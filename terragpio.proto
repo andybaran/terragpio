@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "terragpio";
+option go_package = "./terragpio/terragpio";
 
 package terragpio;
 
@@ -51,6 +51,5 @@ message FanControllerRequest {
 }
 
 message FanControllerResponse {
-  //ToDo: Read more about GRPC status
-  // https://cloud.google.com/apis/design/errors#error_model  
+    string pinCombo = 1;
 }
