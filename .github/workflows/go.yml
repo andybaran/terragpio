@@ -20,7 +20,7 @@ jobs:
 
     - name: Go Get Modules
       run: |
-       go get -v github.com/andybaran/fictional-goggles/terragpio
+       go get -v github.com/andybaran/terragpio
     
     - name: Build Server
       run:  go build -o ./server ./terragpio/cmd/server/rpiserver.go 
