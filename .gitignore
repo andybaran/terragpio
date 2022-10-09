@@ -16,5 +16,6 @@ terraform.tfvars
 .terraform.lock.hcl
 .DS_Store
 *.MIB
-terragpio/client
-terragpio/server
+./client
+./server
+*notes*
