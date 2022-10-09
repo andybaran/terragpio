@@ -32,6 +32,8 @@ slope * (tempmax - newtemp) = (dutyCycleMax - newduty)
 presumably working pwm: https://github.com/andybaran/fictional-goggles/blob/21-april/terragpio/cmd/server/rpiserver.go
 
 
+https://stackoverflow.com/questions/61311436/how-to-fix-parsing-go-mod-module-declares-its-path-as-x-but-was-required-as-y
+
 2022-Mar-12
 - slope needs to be changed to a float otherwise we always lose the decimal point and might as well just make it 1
 - I need a uint representation of the duty cycle to do math on I think, it shouldn't be as high as it's showing in the calculator equation
