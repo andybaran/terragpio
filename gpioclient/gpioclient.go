@@ -27,13 +27,13 @@ type SetBME280Args struct {
 }
 
 type StartFanControllerArgs struct {
-	timeInterval    uint64
+	TimeInterval    uint64
 	BME280DevicePin string
-	temperatureMax  uint64
-	temperatureMin  uint64
-	fanDevice       string
-	dutyCycleMax    uint64
-	dutyCylceMin    uint64
+	TemperatureMax  uint64
+	TemperatureMin  uint64
+	FanDevice       string
+	DutyCycleMax    uint64
+	DutyCylceMin    uint64
 }
 
 func (c *Client) SetPWM(args SetPWMArgs) (*pb.PinSetResponse, error) {
@@ -70,13 +70,13 @@ func (c *Client) StartFanController(args StartFanControllerArgs) (*pb.FanControl
 
 	resp, err := c.c.PWMDutyCycleOutput_BME280TempInput(ctx,
 		&pb.FanControllerRequest{
-			TimeInterval:    args.timeInterval,
+			TimeInterval:    args.TimeInterval,
 			BME280DevicePin: args.BME280DevicePin,
-			TemperatureMax:  args.temperatureMax,
-			TemperatureMin:  args.temperatureMin,
-			FanDevicePin:    args.fanDevice,
-			DutyCycleMax:    args.dutyCycleMax,
-			DutyCycleMin:    args.dutyCylceMin})
+			TemperatureMax:  args.TemperatureMax,
+			TemperatureMin:  args.TemperatureMin,
+			FanDevicePin:    args.FanDevice,
+			DutyCycleMax:    args.DutyCycleMax,
+			DutyCycleMin:    args.DutyCylceMin})
 	if err != nil {
 		log.Fatalf("Error : ", c, err)
 		return nil, err
