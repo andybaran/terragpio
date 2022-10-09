@@ -1,7 +1,5 @@
 # vscode directories
 **/.vscode/*
-
-
 #  Local .terraform directories
 **/.terraform/*
 # .tfstate files
@@ -13,18 +11,10 @@
 # tfvars file
 terraform.tfvars
 *.tfvars
-# TFE airgrap bundle
-*.airgap*
-# TFE license files
-*.rli
 # Terraform testing config files
 **/examples/*/*.tf
 .terraform.lock.hcl
-rpiclient
-rpiserver
 .DS_Store
 *.MIB
-./terragpio/client
-./terragpio/server
-client
-server
+terragpio/client
+terragpio/server
