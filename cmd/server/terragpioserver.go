@@ -229,7 +229,7 @@ func main() {
 	}
 	setPWMDutyCycle(d, physic.Frequency(25000), gpioreg.ByName(("GPIO13")))*/
 
-	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", *port))
+	lis, err := net.Listen("tcp", "10.15.21.124:1234") //fmt.Sprintf("localhost:%d", *port))
 	if err != nil {
 		fmt.Printf("failed to listen: %v", err)
 	}
