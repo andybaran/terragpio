@@ -87,15 +87,15 @@ func (c *Client) StartFanController(args StartFanControllerArgs) (*pb.FanControl
 func NewClient(serverAddr string) (*Client, error) {
 
 	var opts []grpc.DialOption
-
 	opts = append(opts, grpc.WithInsecure())
-
 	opts = append(opts, grpc.WithBlock())
+
 	conn, err := grpc.Dial(serverAddr, opts...)
 	if err != nil {
 		log.Fatalf("fail to dial: %v", err)
 	}
 	defer conn.Close()
+	
 	c := pb.NewSetgpioClient(conn)
 
 	return &Client{c: c}, nil
