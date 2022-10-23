@@ -9,6 +9,7 @@ import (
 	pb "github.com/andybaran/terragpio"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 type Client struct {
@@ -87,7 +88,7 @@ func (c *Client) StartFanController(args StartFanControllerArgs) (*pb.FanControl
 func NewClient(serverAddr string) (*Client, error) {
 
 	var opts []grpc.DialOption
-	opts = append(opts, grpc.WithInsecure())
+	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	opts = append(opts, grpc.WithBlock())
 
 	conn, err := grpc.Dial(serverAddr, opts...)
@@ -95,7 +96,7 @@ func NewClient(serverAddr string) (*Client, error) {
 		log.Fatalf("fail to dial: %v", err)
 	}
 	defer conn.Close()
-	
+
 	c := pb.NewSetgpioClient(conn)
 
 	return &Client{c: c}, nil
