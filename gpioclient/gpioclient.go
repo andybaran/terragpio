@@ -91,7 +91,10 @@ func NewClient(serverAddr string) (*Client, error) {
 	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	opts = append(opts, grpc.WithBlock())
 
-	conn, err := grpc.Dial(serverAddr, opts...)
+	ctx := context.Background()
+	conn, err := grpc.DialContext(ctx, serverAddr, opts...)
+
+	//conn, err := grpc.Dial(serverAddr, opts...)
 	if err != nil {
 		log.Fatalf("fail to dial: %v", err)
 	}
