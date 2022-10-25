@@ -91,10 +91,10 @@ func NewClient(serverAddr string) (*Client, error) {
 	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	opts = append(opts, grpc.WithBlock())
 
-	ctx := context.Background()
-	conn, err := grpc.DialContext(ctx, serverAddr, opts...)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 
-	//conn, err := grpc.Dial(serverAddr, opts...)
+	conn, err := grpc.DialContext(ctx, serverAddr, opts...)
 	if err != nil {
 		log.Fatalf("fail to dial: %v", err)
 	}
@@ -103,5 +103,4 @@ func NewClient(serverAddr string) (*Client, error) {
 	c := pb.NewSetgpioClient(conn)
 
 	return &Client{c: c}, nil
-
 }

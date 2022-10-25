@@ -19,7 +19,7 @@ import (
 var (
 	tls                = flag.Bool("tls", false, "Connection uses TLS if true, else plain TCP")
 	caFile             = flag.String("ca_file", "", "The file containing the CA root cert file")
-	serverAddr         = flag.String("server_addr", "localhost:10001", "The server address in the format of host:port")
+	serverAddr         = flag.String("server_addr", "10.15.21.124:1234", "The server address in the format of host:port")
 	serverHostOverride = flag.String("server_host_override", "x.test.youtube.com", "The server name used to verify the hostname returned by the TLS handshake")
 )
 
@@ -92,10 +92,12 @@ func main() {
 	}
 
 	opts = append(opts, grpc.WithBlock())
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
 	conn, err := grpc.DialContext(ctx, *serverAddr, opts...)
 	if err != nil {
-		log.Fatalf("fail to dial: %w", err)
+		log.Fatalln("fail to dial: ", *serverAddr, err)
 	}
 	defer conn.Close()
 	client := pb.NewSetgpioClient(conn)
