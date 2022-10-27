@@ -85,11 +85,11 @@ func (c *Client) StartFanController(args StartFanControllerArgs) (*pb.FanControl
 	return resp, nil
 }
 
-func NewClient(serverAddr string) (*Client, error) {
+func NewClient(serverAddr string, ctx context.Context) (*Client, error) {
 
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	opts = append(opts, grpc.WithBlock())
+	//opts = append(opts, grpc.WithBlock())
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
