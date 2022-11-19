@@ -8,6 +8,7 @@ import (
 	"math"
 	"net"
 	"strconv"
+	"strings"
 	"time"
 
 	pb "github.com/andybaran/terragpio"
@@ -17,6 +18,7 @@ import (
 
 	"periph.io/x/conn/v3/gpio"
 	"periph.io/x/conn/v3/gpio/gpioreg"
+	"periph.io/x/conn/v3/i2c"
 	"periph.io/x/conn/v3/i2c/i2creg"
 	"periph.io/x/conn/v3/physic"
 	"periph.io/x/devices/v3/bmxx80"
@@ -210,8 +212,30 @@ func main() {
 	fmt.Printf("Pi? %v \n\n", rpi.Present())
 	fmt.Printf("Available Pins: %+v \n\n", gpioreg.All())
 
-	// TODO: This should be printing each item in the slice
-	fmt.Printf("I2C Busses: %+v \n\n", i2creg.All())
+	// Copied from https://pkg.go.dev/periph.io/x/conn/v3@v3.6.10/i2c/i2creg#All
+	// Enumerate all I²C buses available and the corresponding pins.
+	fmt.Print("I²C buses available:\n")
+	for _, ref := range i2creg.All() {
+		fmt.Printf("- %s\n", ref.Name)
+		if ref.Number != -1 {
+			fmt.Printf("  %d\n", ref.Number)
+		}
+		if len(ref.Aliases) != 0 {
+			fmt.Printf("  %s\n", strings.Join(ref.Aliases, " "))
+		}
+
+		b, err := ref.Open()
+		if err != nil {
+			fmt.Printf("  Failed to open: %v", err)
+		}
+		if p, ok := b.(i2c.Pins); ok {
+			fmt.Printf("  SDA: %s", p.SDA())
+			fmt.Printf("  SCL: %s", p.SCL())
+		}
+		if err := b.Close(); err != nil {
+			fmt.Printf("  Failed to close: %v", err)
+		}
+	}
 
 	lis, err := net.Listen("tcp", "10.15.21.124:1234")
 	if err != nil {
