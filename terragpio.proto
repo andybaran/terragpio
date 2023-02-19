@@ -27,7 +27,7 @@ message PWMResponse {
 
 message BME280Request {
     string I2Cbus = 1;
-    uint64 I2Caddr = 2; // format is 0x76
+    string I2Caddr = 2; // format is 0x76
 }
 
 message BME280Response {

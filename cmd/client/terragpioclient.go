@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"strconv"
 	"time"
 
 	pb "github.com/andybaran/terragpio"
@@ -59,8 +58,8 @@ func main() {
 	freqPtr := flag.String("frequency", "25000", "Frequency")
 
 	// Flags to setup I2C bus and device. ie: a BME280 on bus 1
-	I2Cbus := flag.String("I2Cbus", "1", "I2C Bus")        //Very likely "1" on a raspberry pi
-	I2Caddr := flag.Uint64("I2Caddr", 0x77, "I2C Address") //BME280 may also be 0x76
+	I2Cbus := flag.String("I2Cbus", "1", "I2C Bus")          //Very likely "1" on a raspberry pi
+	I2Caddr := flag.String("I2Caddr", "0x77", "I2C Address") //BME280 may also be 0x76
 
 	// Flags to tie BME280 sensor and fan together
 	timeInterval := flag.Uint64("timeInterval", 5, "Time in seconds")
@@ -75,7 +74,7 @@ func main() {
 	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	opts = append(opts, grpc.WithBlock())
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
 	defer cancel()
 
 	conn, err := grpc.DialContext(ctx, *serverAddr, opts...)
@@ -99,7 +98,7 @@ func main() {
 	})
 
 	i2cBusAddr := *I2Cbus
-	i2cBusAddr += strconv.FormatUint(*I2Caddr, 10)
+	i2cBusAddr += *I2Caddr
 	startFanController(client, &pb.FanControllerRequest{
 		TimeInterval:    *timeInterval,
 		BME280DevicePin: i2cBusAddr,

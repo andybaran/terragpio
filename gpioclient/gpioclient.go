@@ -24,7 +24,7 @@ type SetPWMArgs struct {
 
 type SetBME280Args struct {
 	I2CBus  string
-	I2CAddr uint64
+	I2CAddr string
 }
 
 type StartFanControllerArgs struct {
@@ -98,7 +98,7 @@ func NewClient(serverAddr string) (*Client, error) {
 	if err != nil {
 		log.Fatalf("fail to dial: %v", err)
 	}
-	defer conn.Close()
+	//defer conn.Close()
 
 	c := pb.NewSetgpioClient(conn)
 
