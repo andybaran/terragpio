@@ -25,7 +25,7 @@ type SetPWMArgs struct {
 
 type SetBME280Args struct {
 	I2CBus  string
-	I2CAddr uint64
+	I2CAddr string
 }
 
 type StartFanControllerArgs struct {

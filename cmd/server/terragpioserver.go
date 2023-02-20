@@ -32,7 +32,7 @@ Struct to represet a GPIO pin.
 type pinState struct {
 	DutyCycle      *gpio.Duty
 	Frequency      *physic.Frequency
-	I2Caddr        *uint64
+	I2Caddr        *string
 	I2Cbus         *string
 	I2CDeviceOnBus *bmxx80.Dev
 }
@@ -108,7 +108,14 @@ func (s *terragpioserver) SetBME280(ctx context.Context, settings *pb.BME280Requ
 		return nil, status.Errorf(codes.Unknown, fmt.Sprintf("Unable to open the i2c bus, %s", err))
 	}
 
-	dev, err := bmxx80.NewI2C(bus, uint16(settings.I2Caddr), &bmxx80.DefaultOpts)
+	//Convert address from string to uint16
+	i, err := strconv.ParseUint(settings.I2Caddr, 10, 16)
+	if err != nil {
+		log.Fatal(err)
+		return nil, status.Errorf(codes.Unknown, fmt.Sprintf("Unable to convert i2c address from string to uint, %s", err))
+	}
+
+	dev, err := bmxx80.NewI2C(bus, uint16(i), &bmxx80.DefaultOpts)
 	if err != nil {
 		log.Fatal(err)
 		return nil, status.Errorf(codes.Unknown, fmt.Sprintf("Unable to intitialize your bmxx80 i2c device, %s", err))
@@ -122,7 +129,7 @@ func (s *terragpioserver) SetBME280(ctx context.Context, settings *pb.BME280Requ
 
 	// We track an i2c device using it's bus and address on that bus instead of the specific pin
 	i2cBusAddr := settings.I2Cbus
-	i2cBusAddr += strconv.FormatUint(settings.I2Caddr, 10)
+	i2cBusAddr += settings.I2Caddr
 	s.Pins[i2cBusAddr] = thisPinState
 	resp := pb.PinSetResponse{PinNumber: i2cBusAddr}
 	return &resp, nil
