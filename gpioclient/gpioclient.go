@@ -13,7 +13,8 @@ import (
 )
 
 type Client struct {
-	c pb.SetgpioClient
+	c    pb.SetgpioClient
+	conn *grpc.ClientConn
 }
 
 type SetPWMArgs struct {
@@ -85,6 +86,13 @@ func (c *Client) StartFanController(args StartFanControllerArgs) (*pb.FanControl
 	return resp, nil
 }
 
+func (c *Client) Close() error {
+	if c.conn != nil {
+		return nil
+	}
+	return c.conn.Close()
+}
+
 func NewClient(serverAddr string) (*Client, error) {
 
 	var opts []grpc.DialOption
@@ -98,9 +106,11 @@ func NewClient(serverAddr string) (*Client, error) {
 	if err != nil {
 		log.Fatalf("fail to dial: %v", err)
 	}
-	defer conn.Close()
+	//defer conn.Close()
 
 	c := pb.NewSetgpioClient(conn)
 
-	return &Client{c: c}, nil
+	client := &Client{c: c, conn: conn}
+
+	return client, nil
 }

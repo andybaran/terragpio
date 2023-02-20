@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	serverAddr = flag.String("server_addr", "10.15.21.124:1234", "The server address in the format of host:port")
+	serverAddr = flag.String("server_addr", "10.15.21.201:1234", "The server address in the format of host:port")
 )
 
 func setPWM(client pb.SetgpioClient, settings *pb.PWMRequest) (*pb.PinSetResponse, error) {
