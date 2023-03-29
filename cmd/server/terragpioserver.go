@@ -91,12 +91,20 @@ func (s *terragpioserver) SetPWM(ctx context.Context, settings *pb.PWMRequest) (
 	return &resp, nil
 }
 
-func setPWMDutyCycle(d gpio.Duty, f physic.Frequency, p gpio.PinIO) error {
+func (s *terragpioserver) setPWMDutyCycle(d gpio.Duty, f physic.Frequency, p gpio.PinIO) error {
 
 	if err := p.PWM(d, f); err != nil {
 		fmt.Println(err)
 		return err
 	}
+
+	thisPinState := pinState{
+		DutyCycle: &d,
+		Frequency: &f,
+	}
+
+	s.Pins[p.String()] = thisPinState
+
 	fmt.Printf("Current Fan Duty Cycle: %+v \n", d)
 	return nil
 }
@@ -153,6 +161,12 @@ func (s *terragpioserver) SenseBME280(ctx context.Context, pin *pb.PinSetRequest
 
 func (s *terragpioserver) SensePWM(ctx context.Context, pin *pb.PinSetRequest) (*pb.PWMResponse, error) {
 
+	d := s.Pins[pin.PinNumber].DutyCycle.String()
+	f := s.Pins[pin.PinNumber].Frequency.String()
+
+	resp := pb.PWMResponse{Dutycycle: d, Frequency: f}
+	return &resp, nil
+
 }
 
 // Set duty cycle on a pin based on the temperature reading from a BME280
@@ -206,7 +220,7 @@ func (s *terragpioserver) PWMDutyCycleOutput_BME280TempInput(ctx context.Context
 			//set the dutycycle
 			fan := s.Pins[settings.FanDevicePin]
 			f.Set(fan.Frequency.String())
-			setPWMDutyCycle(d,
+			s.setPWMDutyCycle(d,
 				f,
 				gpioreg.ByName(settings.FanDevicePin))
 		}

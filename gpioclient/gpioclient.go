@@ -86,6 +86,17 @@ func (c *Client) StartFanController(args StartFanControllerArgs) (*pb.FanControl
 	return resp, nil
 }
 
+func (c *Client) SensePWM(pin string) (string, string) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	actualsettings, err := c.c.SensePWM(ctx, &pb.PinSetRequest{PinNumber: pin})
+	if err != nil {
+		fmt.Printf("Error from SensePWM: %s", err)
+	}
+	fmt.Println(actualsettings)
+	return actualsettings.Dutycycle, actualsettings.Frequency
+}
+
 func (c *Client) Close() error {
 	if c.conn != nil {
 		return nil

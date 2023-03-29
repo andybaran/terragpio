@@ -22,6 +22,7 @@ const (
 	Setgpio_SetPWM_FullMethodName                             = "/terragpio.setgpio/SetPWM"
 	Setgpio_SetBME280_FullMethodName                          = "/terragpio.setgpio/SetBME280"
 	Setgpio_SenseBME280_FullMethodName                        = "/terragpio.setgpio/SenseBME280"
+	Setgpio_SensePWM_FullMethodName                           = "/terragpio.setgpio/SensePWM"
 	Setgpio_PWMDutyCycleOutput_BME280TempInput_FullMethodName = "/terragpio.setgpio/PWMDutyCycleOutput_BME280TempInput"
 )
 
@@ -32,6 +33,7 @@ type SetgpioClient interface {
 	SetPWM(ctx context.Context, in *PWMRequest, opts ...grpc.CallOption) (*PinSetResponse, error)
 	SetBME280(ctx context.Context, in *BME280Request, opts ...grpc.CallOption) (*PinSetResponse, error)
 	SenseBME280(ctx context.Context, in *PinSetRequest, opts ...grpc.CallOption) (*BME280Response, error)
+	SensePWM(ctx context.Context, in *PinSetRequest, opts ...grpc.CallOption) (*PWMResponse, error)
 	PWMDutyCycleOutput_BME280TempInput(ctx context.Context, in *FanControllerRequest, opts ...grpc.CallOption) (*FanControllerResponse, error)
 }
 
@@ -70,6 +72,15 @@ func (c *setgpioClient) SenseBME280(ctx context.Context, in *PinSetRequest, opts
 	return out, nil
 }
 
+func (c *setgpioClient) SensePWM(ctx context.Context, in *PinSetRequest, opts ...grpc.CallOption) (*PWMResponse, error) {
+	out := new(PWMResponse)
+	err := c.cc.Invoke(ctx, Setgpio_SensePWM_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *setgpioClient) PWMDutyCycleOutput_BME280TempInput(ctx context.Context, in *FanControllerRequest, opts ...grpc.CallOption) (*FanControllerResponse, error) {
 	out := new(FanControllerResponse)
 	err := c.cc.Invoke(ctx, Setgpio_PWMDutyCycleOutput_BME280TempInput_FullMethodName, in, out, opts...)
@@ -86,6 +97,7 @@ type SetgpioServer interface {
 	SetPWM(context.Context, *PWMRequest) (*PinSetResponse, error)
 	SetBME280(context.Context, *BME280Request) (*PinSetResponse, error)
 	SenseBME280(context.Context, *PinSetRequest) (*BME280Response, error)
+	SensePWM(context.Context, *PinSetRequest) (*PWMResponse, error)
 	PWMDutyCycleOutput_BME280TempInput(context.Context, *FanControllerRequest) (*FanControllerResponse, error)
 	mustEmbedUnimplementedSetgpioServer()
 }
@@ -102,6 +114,9 @@ func (UnimplementedSetgpioServer) SetBME280(context.Context, *BME280Request) (*P
 }
 func (UnimplementedSetgpioServer) SenseBME280(context.Context, *PinSetRequest) (*BME280Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SenseBME280 not implemented")
+}
+func (UnimplementedSetgpioServer) SensePWM(context.Context, *PinSetRequest) (*PWMResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SensePWM not implemented")
 }
 func (UnimplementedSetgpioServer) PWMDutyCycleOutput_BME280TempInput(context.Context, *FanControllerRequest) (*FanControllerResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PWMDutyCycleOutput_BME280TempInput not implemented")
@@ -173,6 +188,24 @@ func _Setgpio_SenseBME280_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Setgpio_SensePWM_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PinSetRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SetgpioServer).SensePWM(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Setgpio_SensePWM_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SetgpioServer).SensePWM(ctx, req.(*PinSetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Setgpio_PWMDutyCycleOutput_BME280TempInput_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(FanControllerRequest)
 	if err := dec(in); err != nil {
@@ -209,6 +242,10 @@ var Setgpio_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SenseBME280",
 			Handler:    _Setgpio_SenseBME280_Handler,
+		},
+		{
+			MethodName: "SensePWM",
+			Handler:    _Setgpio_SensePWM_Handler,
 		},
 		{
 			MethodName: "PWMDutyCycleOutput_BME280TempInput",

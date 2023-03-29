@@ -23,8 +23,8 @@ message PWMRequest {
 }
 
 message PWMResponse {
-    string dutycycle = 2;
-    string frequency = 3; 
+    string dutycycle = 1;
+    string frequency = 2; 
 }
 
 message BME280Request {

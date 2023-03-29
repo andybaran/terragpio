@@ -50,6 +50,17 @@ func startFanController(client pb.SetgpioClient, settings *pb.FanControllerReque
 	fmt.Println(actualsettings)
 }
 
+func sensePWM(client pb.SetgpioClient, settings *pb.PinSetRequest) (string, string) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	actualsettings, err := client.SensePWM(ctx, settings)
+	if err != nil {
+		fmt.Printf("Error from SensePWM: %s", err)
+	}
+	fmt.Println(actualsettings)
+	return actualsettings.Dutycycle, actualsettings.Frequency
+}
+
 func main() {
 
 	// Flags to setup a PWM device on a GPIO pin, likely a fan
