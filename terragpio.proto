@@ -3,11 +3,12 @@ syntax = "proto3";
 option go_package = "./terragpio/terragpio";
 
 package terragpio;
-
+// TODO: Implement SENSEPWM
 service setgpio {
     rpc SetPWM(PWMRequest) returns(PinSetResponse) {}
     rpc SetBME280(BME280Request) returns(PinSetResponse) {}
     rpc SenseBME280(PinSetRequest) returns(BME280Response) {} //No need for a duplicate message (at this time) just to pass the pin value even though we are reading
+    rpc SensePWM(PinSetRequest) returns(PWMResponse) {} //No need for a duplicate message (at this time) just to pass the pin value even though we are reading
     rpc PWMDutyCycleOutput_BME280TempInput(FanControllerRequest) returns(FanControllerResponse) {}
 }
 
@@ -22,7 +23,8 @@ message PWMRequest {
 }
 
 message PWMResponse {
-    bool verified = 1; 
+    string dutycycle = 2;
+    string frequency = 3; 
 }
 
 message BME280Request {

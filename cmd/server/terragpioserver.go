@@ -151,6 +151,10 @@ func (s *terragpioserver) SenseBME280(ctx context.Context, pin *pb.PinSetRequest
 	return &resp, nil
 }
 
+func (s *terragpioserver) SensePWM(ctx context.Context, pin *pb.PinSetRequest) (*pb.PWMResponse, error) {
+
+}
+
 // Set duty cycle on a pin based on the temperature reading from a BME280
 func (s *terragpioserver) PWMDutyCycleOutput_BME280TempInput(ctx context.Context, settings *pb.FanControllerRequest) (*pb.FanControllerResponse, error) {
 	//setup the PWM device
